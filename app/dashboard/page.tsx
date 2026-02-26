@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import ClientsContent from '@/components/ClientsContent'
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview')
@@ -135,8 +136,14 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Other Tabs - Placeholder Content */}
-        {activeTab !== 'overview' && (
+              {/* Clients Tab */}
+      {activeTab === 'clients' && (
+        <ClientsContent />
+      )}
+
+              {/* Other Tabs - Placeholder Content */}
+      {activeTab !== 'overview' && activeTab !== 'clients' && (
+
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-100 dark:border-gray-700 animate-fadeIn">
             <div className="text-center">
               <div className="text-6xl mb-4">🚧</div>
