@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import ClientsContent from '@/components/ClientsContent'
+import ClientsContent from '@/components/dashboard/ClientsContent''
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview')
