@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
 // Routes that require authentication
 const protectedRoutes = ['/dashboard', '/account']
@@ -9,34 +9,21 @@ const authRoutes = ['/login', '/register']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const response = NextResponse.next()
+
+  // Create Supabase middleware client (handles cookie session automatically)
+  const supabase = createMiddlewareClient({ req: request, res: response })
+
+  // Refresh session if expired - important for Server Components
+  const { data: { session } } = await supabase.auth.getSession()
+
+  const isAuthenticated = !!session
 
   // Check if route needs protection
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   )
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
-
-  // Get auth token from cookie
-  const accessToken = request.cookies.get('sb-access-token')?.value
-  const refreshToken = request.cookies.get('sb-refresh-token')?.value
-
-  let isAuthenticated = false
-
-  // Verify token with Supabase
-  if (accessToken) {
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
-      const { data: { user }, error } = await supabase.auth.getUser(accessToken)
-      if (user && !error) {
-        isAuthenticated = true
-      }
-    } catch {
-      isAuthenticated = false
-    }
-  }
 
   // Redirect to login if accessing protected route without auth
   if (isProtectedRoute && !isAuthenticated) {
@@ -50,7 +37,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
