@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -7,13 +6,18 @@ import ClientsSection from '@/components/ClientsSection'
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview')
+  const [loggingOut, setLoggingOut] = useState(false)
   const router = useRouter()
 
-  const handleLogout = () => {
-    // Clear authentication cookie
-    document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-    // Redirect to login
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch (e) {
+      // Ignore errors, redirect anyway
+    }
     router.push('/login')
+    router.refresh()
   }
 
   return (
@@ -38,15 +42,15 @@ export default function DashboardPage() {
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+                disabled={loggingOut}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors disabled:opacity-50"
               >
-                Logout
+                {loggingOut ? 'Logging out...' : 'Logout'}
               </button>
             </div>
           </div>
         </div>
       </header>
-
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Navigation Tabs */}
         <div className="mb-8 border-b border-gray-200 dark:border-gray-700">
@@ -73,7 +77,6 @@ export default function DashboardPage() {
             ))}
           </nav>
         </div>
-
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="space-y-6 animate-fadeIn">
@@ -107,7 +110,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-
             {/* Recent Activity */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
               <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -135,15 +137,12 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-
-              {/* Clients Tab */}
-      {activeTab === 'clients' && (
-        <ClientsSection />
-      )}
-
-              {/* Other Tabs - Placeholder Content */}
-      {activeTab !== 'overview' && activeTab !== 'clients' && (
-
+        {/* Clients Tab */}
+        {activeTab === 'clients' && (
+          <ClientsSection />
+        )}
+        {/* Other Tabs - Placeholder Content */}
+        {activeTab !== 'overview' && activeTab !== 'clients' && (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-100 dark:border-gray-700 animate-fadeIn">
             <div className="text-center">
               <div className="text-6xl mb-4">🚧</div>
