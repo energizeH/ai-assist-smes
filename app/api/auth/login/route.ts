@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,38 +14,65 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // TODO: Implement actual authentication logic
-    // This is a placeholder - you would typically:
-    // 1. Query your database for the user
-    // 2. Verify the password hash
-    // 3. Create a session/JWT token
-    // 4. Set secure HTTP-only cookies
+    // Create Supabase client
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
 
-    // For now, accept any credentials for demonstration
-    // In production, replace this with real authentication
-    if (email && password) {
-      // Set auth cookie (in production, use secure JWT tokens)
-      const response = NextResponse.json(
-        { success: true, message: 'Login successful' },
-        { status: 200 }
+    // Sign in with Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      console.error('Supabase login error:', error)
+      return NextResponse.json(
+        { error: error.message || 'Invalid credentials' },
+        { status: 401 }
       )
-
-      // Set a simple auth cookie (in production, use httpOnly, secure cookies with JWT)
-      response.cookies.set('auth-token', 'demo-token', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-        path: '/',
-      })
-
-      return response
     }
 
-    return NextResponse.json(
-      { error: 'Invalid credentials' },
-      { status: 401 }
+    if (!data.session) {
+      return NextResponse.json(
+        { error: 'Login failed - no session created' },
+        { status: 401 }
+      )
+    }
+
+    // Return success with session tokens set as secure cookies
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: 'Login successful',
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.full_name || '',
+        },
+      },
+      { status: 200 }
     )
+
+    // Set auth cookies (Supabase session tokens)
+    response.cookies.set('sb-access-token', data.session.access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    })
+
+    response.cookies.set('sb-refresh-token', data.session.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: '/',
+    })
+
+    return response
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(
