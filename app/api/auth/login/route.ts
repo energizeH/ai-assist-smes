@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,11 +15,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create Supabase client
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    // Create Supabase route handler client (handles cookie session automatically)
+    const supabase = createRouteHandlerClient({ cookies })
 
     // Sign in with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -41,8 +39,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Return success with session tokens set as secure cookies
-    const response = NextResponse.json(
+    // Session is automatically set in cookies by createRouteHandlerClient
+    return NextResponse.json(
       {
         success: true,
         message: 'Login successful',
@@ -54,25 +52,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     )
-
-    // Set auth cookies (Supabase session tokens)
-    response.cookies.set('sb-access-token', data.session.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    })
-
-    response.cookies.set('sb-refresh-token', data.session.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: '/',
-    })
-
-    return response
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(
