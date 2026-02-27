@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
-    const { password, access_token } = await request.json()
+    const { password } = await request.json()
 
     if (!password) {
       return NextResponse.json(
@@ -19,19 +20,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    // Use createRouteHandlerClient - session is already set from auth/callback
+    const supabase = createRouteHandlerClient({ cookies })
 
-    // If access_token provided, set the session first
-    if (access_token) {
-      await supabase.auth.setSession({
-        access_token,
-        refresh_token: '',
-      })
+    // Verify we have a session (user must have gone through auth/callback first)
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Invalid or expired reset link. Please request a new password reset.' },
+        { status: 401 }
+      )
     }
 
+    // Update the user password
     const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
