@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -8,20 +8,7 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
-  const [accessToken, setAccessToken] = useState<string | null>(null)
   const router = useRouter()
-
-  useEffect(() => {
-    // Extract access_token from URL hash (Supabase sends it as a hash fragment)
-    const hash = window.location.hash
-    if (hash) {
-      const params = new URLSearchParams(hash.substring(1))
-      const token = params.get('access_token')
-      if (token) {
-        setAccessToken(token)
-      }
-    }
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,7 +31,7 @@ export default function ResetPasswordPage() {
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, access_token: accessToken }),
+        body: JSON.stringify({ password }),
       })
 
       const data = await response.json()
@@ -57,7 +44,7 @@ export default function ResetPasswordPage() {
         }, 3000)
       } else {
         setStatus('error')
-        setMessage(data.error || 'Failed to update password.')
+        setMessage(data.error || 'Failed to update password. The link may have expired.')
       }
     } catch (err) {
       setStatus('error')
@@ -75,7 +62,6 @@ export default function ResetPasswordPage() {
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Set New Password</h2>
           <p className="mt-2 text-gray-600">Enter your new password below</p>
         </div>
-
         <div className="bg-white rounded-xl shadow-lg p-8">
           {status === 'success' ? (
             <div className="text-center">
