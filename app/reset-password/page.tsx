@@ -53,16 +53,16 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <Link href="/" className="text-3xl font-bold text-blue-600">
             AI-Assist for SMEs
           </Link>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">Set New Password</h2>
-          <p className="mt-2 text-gray-600">Enter your new password below</p>
+          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">Set New Password</h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Enter your new password below</p>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
           {status === 'success' ? (
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -70,9 +70,9 @@ export default function ResetPasswordPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Password Updated!</h3>
-              <p className="text-gray-600 mb-6">{message}</p>
-              <p className="text-sm text-gray-500">Redirecting to login...</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Password Updated!</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Redirecting to login...</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -82,7 +82,7 @@ export default function ResetPasswordPage() {
                 </div>
               )}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   New Password
                 </label>
                 <input
@@ -91,14 +91,14 @@ export default function ResetPasswordPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800"
                   placeholder="Minimum 6 characters"
                   minLength={6}
                   disabled={status === 'loading'}
                 />
               </div>
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confirm New Password
                 </label>
                 <input
@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800"
                   placeholder="Repeat your new password"
                   minLength={6}
                   disabled={status === 'loading'}
@@ -121,7 +121,7 @@ export default function ResetPasswordPage() {
                 {status === 'loading' ? 'Updating Password...' : 'Update Password'}
               </button>
               <div className="text-center">
-                <Link href="/login" className="text-gray-600 hover:text-gray-900 text-sm">
+                <Link href="/login" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm">
                   ← Back to Login
                 </Link>
               </div>

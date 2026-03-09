@@ -9,8 +9,8 @@ const services = [
     desc: 'Never miss a customer enquiry again. Our AI receptionist handles calls, chats, and WhatsApp messages around the clock, booking appointments, answering FAQs, and routing complex queries to your team.',
     features: ['24/7 availability', 'Multi-channel support', 'Appointment booking', 'FAQ automation', 'Seamless handover to staff', 'CRM integration'],
     price: 'From £299/month',
-    cta: 'Try AI Receptionist Demo',
-    link: '/demo',
+    cta: 'Get Started',
+    link: '/plans',
     color: 'from-blue-500 to-blue-600',
   },
   {
@@ -45,8 +45,8 @@ const services = [
     desc: 'Stop guessing and start knowing. Our AI analytics platform transforms your raw business data into actionable insights, helping you identify opportunities, spot problems early, and make better decisions faster.',
     features: ['Real-time dashboards', 'Sales forecasting', 'Customer insights', 'Performance tracking', 'Automated reports', 'KPI monitoring'],
     price: 'From £249/month',
-    cta: 'View Demo Dashboard',
-    link: '/dashboard',
+    cta: 'View Dashboard',
+    link: '/plans',
     color: 'from-orange-500 to-orange-600',
   },
   {
