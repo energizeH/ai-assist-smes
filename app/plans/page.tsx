@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 const plans = [
   {
     name: 'Starter',
     price: '£49',
+    annualPrice: '£39',
     period: '/month',
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER,
     description: 'Perfect for small businesses getting started with AI automation',
     features: [
       'AI Chatbot (up to 1,000 messages/month)',
@@ -23,7 +26,9 @@ const plans = [
   {
     name: 'Professional',
     price: '£99',
+    annualPrice: '£79',
     period: '/month',
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
     description: 'Ideal for growing businesses seeking advanced automation',
     features: [
       'AI Chatbot (up to 10,000 messages/month)',
@@ -41,7 +46,9 @@ const plans = [
   {
     name: 'Enterprise',
     price: '£299',
+    annualPrice: '£239',
     period: '/month',
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE,
     description: 'For established businesses requiring complete automation solutions',
     features: [
       'AI Chatbot (unlimited messages)',
@@ -62,178 +69,165 @@ const plans = [
 
 export default function PlansPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly')
+  const [loading, setLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
-  const handlePurchase = (planName: string) => {
-    alert(`Redirecting to checkout for ${planName} plan...\n\nThis is a demo. In production, this would integrate with Stripe or another payment processor.`)
+  const handlePurchase = async (plan: typeof plans[0]) => {
+    setLoading(plan.name)
+    setError(null)
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planName: plan.name, billingPeriod })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (res.status === 401) {
+          router.push('/login?redirect=/plans')
+          return
+        }
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(null)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
-              AI-Assist for SMEs
-            </Link>
-            <div className="flex gap-4">
-              <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                Sign In
-              </Link>
-              <Link href="/register" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all">
-                Get Started
-              </Link>
+      <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <Link href="/" className="text-xl font-bold text-blue-600">AI-Assist for SMEs</Link>
+            <div className="flex items-center space-x-4">
+              <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors text-sm font-medium">Sign In</Link>
+              <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">Get Started</Link>
             </div>
           </div>
         </div>
-      </header>
+      </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12 animate-fadeIn">
-          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Choose Your Perfect Plan
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
-            Flexible pricing for businesses of all sizes. Start automating today.
-          </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Choose Your Perfect Plan</h1>
+          <p className="text-xl text-gray-600 dark:text-gray-400">Flexible pricing for businesses of all sizes. Start automating today.</p>
+        </div>
 
-          {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <span className={`text-lg ${billingPeriod === 'monthly' ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-600 dark:text-gray-400'}`}>
-              Monthly
-            </span>
-            <button
-              onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
-              className="relative w-14 h-8 bg-gray-300 dark:bg-gray-600 rounded-full transition-colors"
-            >
-              <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                billingPeriod === 'annual' ? 'transform translate-x-6' : ''
-              }`} />
-            </button>
-            <span className={`text-lg ${billingPeriod === 'annual' ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-600 dark:text-gray-400'}`}>
-              Annual
-              <span className="ml-2 text-sm bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                Save 20%
-              </span>
-            </span>
+        {/* Error */}
+        {error && (
+          <div className="max-w-md mx-auto mb-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-center">
+            {error}
           </div>
+        )}
+
+        {/* Billing Toggle */}
+        <div className="flex items-center justify-center gap-4 mb-12">
+          <span className={`text-sm font-medium ${billingPeriod === 'monthly' ? 'text-blue-600' : 'text-gray-500 dark:text-gray-400'}`}>Monthly</span>
+          <button
+            onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
+            className={`relative w-14 h-8 rounded-full transition-colors ${billingPeriod === 'annual' ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+          >
+            <span className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${billingPeriod === 'annual' ? 'translate-x-7' : 'translate-x-1'}`} />
+          </button>
+          <span className={`text-sm font-medium ${billingPeriod === 'annual' ? 'text-blue-600' : 'text-gray-500 dark:text-gray-400'}`}>Annual</span>
+          <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">Save 20%</span>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 border ${
+              className={`relative rounded-2xl p-8 ${
                 plan.highlighted
-                  ? 'border-blue-500 dark:border-blue-400 ring-2 ring-blue-500 dark:ring-blue-400'
-                  : 'border-gray-200 dark:border-gray-700'
-              } p-8 animate-fadeIn`}
+                  ? 'bg-gradient-to-b from-blue-600 to-purple-700 text-white shadow-2xl scale-105'
+                  : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-lg'
+              }`}
             >
               {plan.popular && (
-                <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold px-4 py-1 rounded-bl-xl rounded-tr-xl">
-                  MOST POPULAR
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-orange-400 to-pink-500 text-white text-xs font-bold px-4 py-2 rounded-full uppercase tracking-wide shadow-lg">MOST POPULAR</span>
                 </div>
               )}
 
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{plan.name}</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">{plan.description}</p>
-              </div>
+              <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+              <p className={`text-sm mb-6 ${plan.highlighted ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>{plan.description}</p>
 
               <div className="mb-6">
-                <div className="flex items-baseline">
-                  <span className="text-5xl font-bold text-gray-900 dark:text-white">
-                    {billingPeriod === 'annual' ? `£${Math.round(parseInt(plan.price.slice(1)) * 0.8)}` : plan.price}
-                  </span>
-                  <span className="text-gray-600 dark:text-gray-400 ml-2">{plan.period}</span>
-                </div>
+                <span className="text-4xl font-extrabold">
+                  {billingPeriod === 'annual' ? plan.annualPrice : plan.price}
+                </span>
+                <span className={`text-sm ${plan.highlighted ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>{plan.period}</span>
                 {billingPeriod === 'annual' && (
-                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                    Billed annually at £{Math.round(parseInt(plan.price.slice(1)) * 0.8 * 12)}
+                  <p className={`text-xs mt-1 ${plan.highlighted ? 'text-blue-200' : 'text-gray-400'}`}>
+                    Billed annually — save 20%
                   </p>
                 )}
               </div>
 
               <button
-                onClick={() => handlePurchase(plan.name)}
-                className={`w-full py-3 px-6 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                onClick={() => handlePurchase(plan)}
+                disabled={loading === plan.name}
+                className={`w-full py-3 px-6 rounded-xl font-semibold transition-all transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed mb-8 ${
                   plan.highlighted
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg'
-                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                    ? 'bg-white text-blue-700 hover:bg-gray-50 shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg'
                 }`}
               >
-                Get Started
+                {loading === plan.name ? 'Redirecting to checkout...' : 'Get Started'}
               </button>
 
-              <div className="mt-8">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white mb-4">What's included:</p>
-                <ul className="space-y-3">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <svg className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-gray-600 dark:text-gray-400 text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <ul className="space-y-3">
+                {plan.features.map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3 text-sm">
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      plan.highlighted ? 'bg-white/20 text-white' : 'bg-green-100 text-green-600'
+                    }`}>✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
 
-        {/* FAQ Section */}
-        <div className="mt-16 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">Frequently Asked Questions</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Can I change plans later?</h3>
-              <p className="text-gray-600 dark:text-gray-400">Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Is there a free trial?</h3>
-              <p className="text-gray-600 dark:text-gray-400">We offer a 14-day free trial on all plans. No credit card required to start.</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">What payment methods do you accept?</h3>
-              <p className="text-gray-600 dark:text-gray-400">We accept all major credit cards, PayPal, and bank transfers for annual plans.</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Can I cancel anytime?</h3>
-              <p className="text-gray-600 dark:text-gray-400">Yes, you can cancel your subscription at any time with no cancellation fees.</p>
-            </div>
+        {/* FAQ */}
+        <div className="mt-20 max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-8">Frequently Asked Questions</h2>
+          <div className="space-y-6">
+            {[
+              { q: 'Can I change plans later?', a: 'Yes! You can upgrade or downgrade your plan at any time from your billing settings. Changes take effect immediately.' },
+              { q: 'Is there a free trial?', a: 'We offer a 14-day free trial on all plans. No credit card required to start.' },
+              { q: 'What payment methods do you accept?', a: 'We accept all major credit and debit cards via Stripe. Bank transfers are available for annual enterprise plans.' },
+              { q: 'Can I cancel anytime?', a: 'Yes, you can cancel your subscription at any time with no cancellation fees. Access continues until the end of your billing period.' }
+            ].map((faq, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{faq.q}</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{faq.a}</p>
+              </div>
+            ))}
           </div>
         </div>
-
-        {/* CTA Section */}
-        <div className="mt-16 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Still have questions?</h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">Our team is here to help you choose the right plan</p>
-          <div className="flex gap-4 justify-center">
-            <Link
-              href="/support"
-              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 shadow-lg"
-            >
-              Contact Support
-            </Link>
-            <Link
-              href="/"
-              className="px-8 py-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-semibold rounded-lg transition-all"
-            >
-              Learn More
-            </Link>
-          </div>
-        </div>
-      </main>
+      </div>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <p className="text-center text-gray-600 dark:text-gray-400">
-            © 2026 AI-Assist for SMEs. All rights reserved.
-          </p>
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16 py-8">
+        <div className="max-w-7xl mx-auto px-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+          <p>© 2026 AI-Assist for SMEs. All rights reserved.</p>
+          <div className="flex justify-center gap-6 mt-4">
+            <Link href="/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</Link>
+            <Link href="/contact" className="hover:text-blue-600 transition-colors">Contact</Link>
+          </div>
         </div>
       </footer>
     </div>
