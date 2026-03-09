@@ -1,49 +1,116 @@
 'use client'
-import { useState } from 'react'
+
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import ClientsSection from '@/components/ClientsSection'
+
+interface Stats {
+  totalClients: number
+  activeLeads: number
+  appointmentsToday: number
+  automationsActive: number
+}
+
+interface Activity {
+  id: string
+  type: string
+  title: string
+  description: string
+  created_at: string
+}
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview')
   const [loggingOut, setLoggingOut] = useState(false)
+  const [stats, setStats] = useState<Stats>({ totalClients: 0, activeLeads: 0, appointmentsToday: 0, automationsActive: 0 })
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/dashboard/stats')
+      if (res.ok) {
+        const data = await res.json()
+        setStats(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats', err)
+    }
+  }, [])
+
+  const fetchActivities = useCallback(async () => {
+    try {
+      const res = await fetch('/api/dashboard/activities')
+      if (res.ok) {
+        const data = await res.json()
+        setActivities(data.activities || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch activities', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchStats()
+    fetchActivities()
+    const interval = setInterval(() => {
+      fetchStats()
+      fetchActivities()
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [fetchStats, fetchActivities])
 
   const handleLogout = async () => {
     setLoggingOut(true)
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
-    } catch (e) {
-      // Ignore errors, redirect anyway
-    }
+    } catch (e) {}
     router.push('/login')
     router.refresh()
   }
 
+  const formatTimeAgo = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins} minutes ago`
+    const diffHours = Math.floor(diffMins / 60)
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+    return `${Math.floor(diffHours / 24)} days ago`
+  }
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', href: '/dashboard' },
+    { id: 'clients', label: 'Clients', href: '/dashboard/clients' },
+    { id: 'appointments', label: 'Appointments', href: '/dashboard/appointments' },
+    { id: 'leads', label: 'Leads', href: '/dashboard/leads' },
+    { id: 'automations', label: 'Automations', href: '/dashboard/automations' },
+    { id: 'analytics', label: 'Analytics', href: '/dashboard/analytics' },
+    { id: 'billing', label: 'Billing', href: '/dashboard/billing' },
+    { id: 'settings', label: 'Settings', href: '/dashboard/settings' },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI-Assist Dashboard</h1>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/" className="text-xl font-bold text-blue-600 dark:text-blue-400 mr-8">AI-Assist</Link>
+            </div>
             <div className="flex items-center space-x-4">
-              <Link 
-                href="/support" 
-                className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                <span className="text-sm font-medium">Support</span>
-              </Link>
-              <Link 
-                href="/account" 
-                className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                <span className="text-sm font-medium">Account</span>
-              </Link>
+              <Link href="/support" className="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">Support</Link>
+              <Link href="/dashboard/settings" className="text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">Account</Link>
               <button
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors disabled:opacity-50"
+                className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 font-medium transition-colors disabled:opacity-50"
               >
                 {loggingOut ? 'Logging out...' : 'Logout'}
               </button>
@@ -51,111 +118,118 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Navigation Tabs */}
-        <div className="mb-8 border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex space-x-8 overflow-x-auto">
-            {[
-              { id: 'overview', label: 'Overview' },
-              { id: 'clients', label: 'Clients' },
-              { id: 'appointments', label: 'Appointments' },
-              { id: 'leads', label: 'Leads' },
-              { id: 'automations', label: 'Automations' },
-              { id: 'settings', label: 'Settings' },
-            ].map((tab) => (
-              <button
+
+      {/* Navigation */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-1 overflow-x-auto">
+            {tabs.map((tab) => (
+              <Link
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`${
+                href={tab.href}
+                className={`whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm transition-all ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200`}
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'
+                }`}
+                onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label}
-              </button>
+              </Link>
             ))}
           </nav>
         </div>
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <div className="space-y-6 animate-fadeIn">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700 transform hover:-translate-y-1">
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Clients</div>
-                <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">247</div>
-                <div className="mt-2 text-sm text-green-600 dark:text-green-400 flex items-center">
-                  <span className="mr-1">↑</span> +12% from last month
-                </div>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700 transform hover:-translate-y-1">
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Leads</div>
-                <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">89</div>
-                <div className="mt-2 text-sm text-green-600 dark:text-green-400 flex items-center">
-                  <span className="mr-1">↑</span> +23% from last month
-                </div>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700 transform hover:-translate-y-1">
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Appointments Today</div>
-                <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">15</div>
-                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">3 pending confirmation</div>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700 transform hover:-translate-y-1">
-                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Automation Uptime</div>
-                <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">99.8%</div>
-                <div className="mt-2 text-sm text-green-600 dark:text-green-400 flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                  All systems operational
-                </div>
-              </div>
-            </div>
-            {/* Recent Activity */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
-              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h2>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {[
-                    { time: '10 minutes ago', action: 'New lead captured', detail: 'John Smith via website form', icon: '📬' },
-                    { time: '25 minutes ago', action: 'Appointment booked', detail: 'Sarah Johnson - Tomorrow 2:00 PM', icon: '📅' },
-                    { time: '1 hour ago', action: 'WhatsApp message sent', detail: 'Appointment reminder to 5 clients', icon: '💬' },
-                    { time: '2 hours ago', action: 'Lead qualified', detail: 'Michael Brown moved to sales pipeline', icon: '✅' },
-                  ].map((activity, index) => (
-                    <div key={index} className="flex items-start p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                      <span className="text-2xl mr-3">{activity.icon}</span>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">{activity.action}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{activity.detail}</div>
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-500">{activity.time}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Clients Tab */}
-        {activeTab === 'clients' && (
-          <ClientsSection />
-        )}
-        {/* Other Tabs - Placeholder Content */}
-        {activeTab !== 'overview' && activeTab !== 'clients' && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-100 dark:border-gray-700 animate-fadeIn">
-            <div className="text-center">
-              <div className="text-6xl mb-4">🚧</div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Section
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                This section is under development. Check back soon for updates!
-              </p>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Clients</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+              {loading ? '...' : stats.totalClients}
+            </p>
+            <Link href="/dashboard/clients" className="text-xs text-blue-600 hover:underline mt-2 inline-block">View all clients →</Link>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Leads</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+              {loading ? '...' : stats.activeLeads}
+            </p>
+            <Link href="/dashboard/leads" className="text-xs text-blue-600 hover:underline mt-2 inline-block">View pipeline →</Link>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Appointments Today</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+              {loading ? '...' : stats.appointmentsToday}
+            </p>
+            <Link href="/dashboard/appointments" className="text-xs text-blue-600 hover:underline mt-2 inline-block">View calendar →</Link>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Automations</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+              {loading ? '...' : stats.automationsActive}
+            </p>
+            <Link href="/dashboard/automations" className="text-xs text-blue-600 hover:underline mt-2 inline-block">Manage automations →</Link>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Link href="/dashboard/clients" className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-4 text-center transition-colors">
+            <div className="text-2xl mb-1">👥</div>
+            <div className="text-sm font-medium">Add Client</div>
+          </Link>
+          <Link href="/dashboard/appointments" className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl p-4 text-center transition-colors">
+            <div className="text-2xl mb-1">📅</div>
+            <div className="text-sm font-medium">New Appointment</div>
+          </Link>
+          <Link href="/dashboard/leads" className="bg-green-600 hover:bg-green-700 text-white rounded-xl p-4 text-center transition-colors">
+            <div className="text-2xl mb-1">🎯</div>
+            <div className="text-sm font-medium">Add Lead</div>
+          </Link>
+          <Link href="/dashboard/automations" className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl p-4 text-center transition-colors">
+            <div className="text-2xl mb-1">⚡</div>
+            <div className="text-sm font-medium">New Automation</div>
+          </Link>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h2>
+            <button onClick={() => { fetchStats(); fetchActivities(); }} className="text-xs text-blue-600 hover:underline">
+              Refresh
+            </button>
+          </div>
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+            {loading ? (
+              <div className="px-6 py-8 text-center text-gray-500">Loading activity...</div>
+            ) : activities.length === 0 ? (
+              <div className="px-6 py-8 text-center">
+                <p className="text-gray-500 dark:text-gray-400">No recent activity yet.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Add clients, leads or appointments to see activity here.</p>
+              </div>
+            ) : (
+              activities.map((activity) => (
+                <div key={activity.id} className="px-6 py-4 flex items-start gap-4">
+                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm">
+                      {activity.type === 'lead' ? '🎯' : activity.type === 'appointment' ? '📅' : activity.type === 'client' ? '👥' : '⚡'}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.title}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{activity.description}</p>
+                  </div>
+                  <span className="text-xs text-gray-400 whitespace-nowrap">{formatTimeAgo(activity.created_at)}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
