@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
-import { Send, User, Bot, Loader2, ArrowLeft } from 'lucide-react'
 
 type Message = {
   sender: 'user' | 'bot'
@@ -23,7 +22,7 @@ export default function DemoPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: \"smooth\" })
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   useEffect(() => {
@@ -53,7 +52,7 @@ export default function DemoPage() {
       if (!response.ok) throw new Error('Failed to get response')
 
       const data = await response.json()
-      
+
       const botMsg: Message = {
         sender: 'bot',
         text: data.text,
@@ -64,7 +63,7 @@ export default function DemoPage() {
       console.error('Chat error:', error)
       setMessages(prev => [...prev, {
         sender: 'bot',
-        text: \"I apologize, but I encountered a technical glitch. Please try again or book a call with our team for immediate assistance!\",
+        text: 'I apologize, but I encountered a technical glitch. Please try again or book a call with our team for immediate assistance!',
         timestamp: new Date()
       }])
     } finally {
@@ -73,21 +72,20 @@ export default function DemoPage() {
   }
 
   return (
-    <div className=\"min-h-screen bg-slate-950 text-white flex flex-col\">
+    <div style={{ minHeight: '100vh', background: '#020817', color: 'white', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <header className=\"border-b border-white/10 bg-slate-950/50 backdrop-blur-md sticky top-0 z-10\">
-        <div className=\"max-w-4xl mx-auto px-4 h-16 flex items-center justify-between\">
-          <Link href=\"/\" className=\"flex items-center gap-2 text-slate-400 hover:text-white transition-colors\">
-            <ArrowLeft size={20} />
-            <span className=\"text-sm font-medium\">Back to Home</span>
+      <header style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(2,8,23,0.5)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '0 1rem', height: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500 }}>
+            &larr; Back to Home
           </Link>
-          <div className=\"flex items-center gap-2\">
-            <div className=\"w-2 h-2 bg-green-500 rounded-full animate-pulse\" />
-            <span className=\"text-sm font-semibold tracking-tight text-slate-200\">AI Receptionist Live Demo</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: '0.5rem', height: '0.5rem', background: '#22c55e', borderRadius: '50%' }} />
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e2e8f0' }}>AI Receptionist Live Demo</span>
           </div>
-          <Link 
-            href=\"/register\" 
-            className=\"bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-all shadow-lg shadow-indigo-500/20\"
+          <Link
+            href="/register"
+            style={{ background: '#4f46e5', color: 'white', padding: '0.375rem 1rem', borderRadius: '9999px', fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none' }}
           >
             Get Started
           </Link>
@@ -95,25 +93,28 @@ export default function DemoPage() {
       </header>
 
       {/* Chat Area */}
-      <main className=\"flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col gap-6 overflow-y-auto mb-24\">
+      <main style={{ flex: 1, maxWidth: '56rem', width: '100%', margin: '0 auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto', marginBottom: '6rem' }}>
         {messages.map((msg, i) => (
-          <div 
-            key={i} 
-            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+          <div
+            key={i}
+            style={{ display: 'flex', justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start' }}
           >
-            <div className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                msg.sender === 'user' ? 'bg-indigo-600' : 'bg-slate-800 border border-white/10'
-              }`}>
-                {msg.sender === 'user' ? <User size={16} /> : <Bot size={16} className=\"text-indigo-400\" />}
+            <div style={{ display: 'flex', gap: '0.75rem', maxWidth: '85%', flexDirection: msg.sender === 'user' ? 'row-reverse' : 'row' }}>
+              <div style={{
+                width: '2rem', height: '2rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: 700,
+                background: msg.sender === 'user' ? '#4f46e5' : '#1e293b',
+                border: msg.sender === 'user' ? 'none' : '1px solid rgba(255,255,255,0.1)'
+              }}>
+                {msg.sender === 'user' ? 'U' : 'AI'}
               </div>
-              <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                msg.sender === 'user' 
-                  ? 'bg-indigo-600 text-white rounded-tr-none' 
-                  : 'bg-slate-900 border border-white/10 text-slate-200 rounded-tl-none'
-              }`}>
+              <div style={{
+                padding: '1rem', borderRadius: msg.sender === 'user' ? '1rem 0 1rem 1rem' : '0 1rem 1rem 1rem', fontSize: '0.875rem', lineHeight: '1.6',
+                background: msg.sender === 'user' ? '#4f46e5' : '#0f172a',
+                border: msg.sender === 'user' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                color: msg.sender === 'user' ? 'white' : '#e2e8f0'
+              }}>
                 {msg.text}
-                <div className={`text-[10px] mt-2 opacity-50 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                <div style={{ fontSize: '0.625rem', marginTop: '0.5rem', opacity: 0.5, textAlign: msg.sender === 'user' ? 'right' : 'left' }}>
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
@@ -121,13 +122,13 @@ export default function DemoPage() {
           </div>
         ))}
         {isLoading && (
-          <div className=\"flex justify-start animate-in fade-in duration-300\">
-            <div className=\"flex gap-3 max-w-[85%]\">
-              <div className=\"w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center\">
-                <Bot size={16} className=\"text-indigo-400\" />
-              </div>
-              <div className=\"bg-slate-900 border border-white/10 p-4 rounded-2xl rounded-tl-none\">
-                <Loader2 size={18} className=\"animate-spin text-indigo-400\" />
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', maxWidth: '85%' }}>
+              <div style={{ width: '2rem', height: '2rem', borderRadius: '50%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700 }}>AI</div>
+              <div style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '0 1rem 1rem 1rem', display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                <span style={{ width: '0.5rem', height: '0.5rem', background: '#6366f1', borderRadius: '50%', animation: 'pulse 1s infinite' }} />
+                <span style={{ width: '0.5rem', height: '0.5rem', background: '#6366f1', borderRadius: '50%', animation: 'pulse 1s infinite 0.2s' }} />
+                <span style={{ width: '0.5rem', height: '0.5rem', background: '#6366f1', borderRadius: '50%', animation: 'pulse 1s infinite 0.4s' }} />
               </div>
             </div>
           </div>
@@ -136,27 +137,27 @@ export default function DemoPage() {
       </main>
 
       {/* Input Area */}
-      <div className=\"fixed bottom-0 left-0 right-0 bg-slate-950/80 backdrop-blur-xl border-t border-white/10 p-4\">
-        <div className=\"max-w-4xl mx-auto flex gap-3\">
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(2,8,23,0.8)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(255,255,255,0.1)', padding: '1rem' }}>
+        <div style={{ maxWidth: '56rem', margin: '0 auto', display: 'flex', gap: '0.75rem' }}>
           <input
-            type=\"text\"
+            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => ea.key === 'Enter' && handleSend()}
-            placeholder=\"Ask anything about our AI services...\"
-            className=\"flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 placeholder:text-slate-500 transition-all\"
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Ask anything about our AI services..."
             disabled={isLoading}
+            style={{ flex: 1, background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.75rem', padding: '0.75rem 1rem', fontSize: '0.875rem', color: 'white', outline: 'none' }}
           />
           <button
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
-            className=\"bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white p-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20\"
+            style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '0.75rem', borderRadius: '0.75rem', cursor: 'pointer', opacity: (isLoading || !input.trim()) ? 0.5 : 1 }}
           >
-            <Send size={20} />
+            Send
           </button>
         </div>
-        <p className=\"text-center text-[10px] text-slate-500 mt-3\">
-          Our AI Receptionist is powered by GPT-4o-mini and specialized in SME automation.
+        <p style={{ textAlign: 'center', fontSize: '0.625rem', color: '#64748b', marginTop: '0.75rem' }}>
+          AI Receptionist powered by GPT-4o-mini, specialized in SME automation.
         </p>
       </div>
     </div>
