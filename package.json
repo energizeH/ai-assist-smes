@@ -18,7 +18,8 @@
     "nodemailer": "^6.9.8",
     "jose": "^5.2.0",
     "uuid": "^9.0.1",
-    "stripe": "^14.21.0"
+    "stripe": "^14.21.0",
+    "lucide-react": "^0.344.0"
   },
   "devDependencies": {
     "typescript": "^5",
