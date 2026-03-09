@@ -12,16 +12,13 @@ export async function GET() {
     }
 
     const userId = session.user.id
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    const todayStr = new Date().toISOString().split('T')[0]
 
     const [clientsRes, leadsRes, appointmentsRes, automationsRes] = await Promise.all([
-      supabase.from('clients').select('id', { count: 'exact' }).eq('user_id', userId),
-      supabase.from('leads').select('id', { count: 'exact' }).eq('user_id', userId).neq('stage', 'converted'),
-      supabase.from('appointments').select('id', { count: 'exact' }).eq('user_id', userId).gte('start_time', today.toISOString()).lt('start_time', tomorrow.toISOString()),
-      supabase.from('automations').select('id', { count: 'exact' }).eq('user_id', userId).eq('is_active', true),
+      supabase.from('clients').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+      supabase.from('leads').select('id', { count: 'exact', head: true }).eq('user_id', userId).neq('stage', 'converted'),
+      supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('appointment_date', todayStr).neq('status', 'cancelled'),
+      supabase.from('automations').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_active', true),
     ])
 
     return NextResponse.json({
