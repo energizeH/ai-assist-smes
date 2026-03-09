@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2023-10-16',
 });
 
 const supabase = createClient(
@@ -52,7 +52,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if user already has a Stripe customer ID
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('stripe_customer_id')
@@ -62,7 +61,6 @@ export async function POST(req: NextRequest) {
     let customerId = subscription?.stripe_customer_id;
 
     if (!customerId) {
-      // Create a new Stripe customer
       const customer = await stripe.customers.create({
         email: userEmail,
         metadata: { supabase_user_id: userId },
