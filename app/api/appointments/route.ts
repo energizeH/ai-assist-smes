@@ -10,13 +10,13 @@ export async function GET() {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data, error } = await supabase
-      .from('clients')
+      .from('appointments')
       .select('*')
       .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false })
+      .order('appointment_date', { ascending: true })
 
     if (error) throw error
-    return NextResponse.json({ clients: data || [] })
+    return NextResponse.json({ appointments: data || [] })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -29,22 +29,25 @@ export async function POST(request: NextRequest) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { name, email, phone, company, status, notes } = body
+    const { client_name, client_email, client_phone, service, appointment_date, appointment_time, duration, notes, status } = body
 
-    if (!name || !email) {
-      return NextResponse.json({ error: 'Name and email are required' }, { status: 400 })
+    if (!client_name || !appointment_date || !appointment_time) {
+      return NextResponse.json({ error: 'Client name, date, and time are required' }, { status: 400 })
     }
 
     const { data, error } = await supabase
-      .from('clients')
+      .from('appointments')
       .insert([{
         user_id: session.user.id,
-        name,
-        email,
-        phone: phone || null,
-        company: company || null,
-        status: status || 'active',
+        client_name,
+        client_email: client_email || null,
+        client_phone: client_phone || null,
+        service: service || null,
+        appointment_date,
+        appointment_time,
+        duration: duration || 30,
         notes: notes || null,
+        status: status || 'scheduled',
       }])
       .select()
       .single()
@@ -54,12 +57,12 @@ export async function POST(request: NextRequest) {
     // Log activity
     await supabase.from('activities').insert([{
       user_id: session.user.id,
-      type: 'client',
-      title: `New client: ${name}`,
-      description: `${name} (${email}) was added as a client`,
+      type: 'appointment',
+      title: `New appointment: ${client_name}`,
+      description: `Scheduled for ${appointment_date} at ${appointment_time}`,
     }])
 
-    return NextResponse.json({ client: data }, { status: 201 })
+    return NextResponse.json({ appointment: data }, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

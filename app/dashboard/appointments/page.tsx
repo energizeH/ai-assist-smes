@@ -1,372 +1,319 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { 
-  CalendarIcon, 
-  ClockIcon, 
-  UserIcon, 
-  PlusIcon,
-  SearchIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CheckCircle2Icon,
-  XCircleIcon,
-  AlertCircleIcon,
-  FilterIcon
-} from 'lucide-react';
+import { useState, useEffect } from 'react'
+import DashboardLayout from '../../components/DashboardLayout'
 
 interface Appointment {
-  id: string;
-  client_id: string;
-  client_name: string;
-  service_type: string;
-  appointment_date: string;
-  start_time: string;
-  duration: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  notes: string;
+  id: string
+  client_name: string
+  client_email?: string
+  client_phone?: string
+  service?: string
+  appointment_date: string
+  appointment_time: string
+  duration?: number
+  notes?: string
+  status: string
+  created_at: string
 }
 
-const statusColors = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  confirmed: 'bg-blue-100 text-blue-800',
-  completed: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800'
-};
-
 export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'list' | 'calendar'>('list');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentAppt, setCurrentAppt] = useState<Partial<Appointment> | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const supabase = createClientComponentClient();
-
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
+  const [view, setView] = useState<'list' | 'calendar'>('list')
+  const [form, setForm] = useState({
+    client_name: '', client_email: '', client_phone: '', service: '',
+    appointment_date: '', appointment_time: '', duration: 30, notes: '', status: 'scheduled'
+  })
+  const [saving, setSaving] = useState(false)
 
   const fetchAppointments = async () => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .order('appointment_date', { ascending: true })
-        .order('start_time', { ascending: true });
-
-      if (error) throw error;
-      setAppointments(data || []);
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
+      const res = await fetch('/api/appointments')
+      if (!res.ok) throw new Error('Failed to load appointments')
+      const data = await res.json()
+      setAppointments(data.appointments || [])
+    } catch (err: any) {
+      setError(err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleSaveAppointment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => { fetchAppointments() }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const apptData = {
-        ...currentAppt,
-        user_id: user.id,
-      };
-
-      if (currentAppt?.id) {
-        const { error } = await supabase
-          .from('appointments')
-          .update(apptData)
-          .eq('id', currentAppt.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('appointments')
-          .insert([apptData]);
-        if (error) throw error;
+      const method = editingAppointment ? 'PUT' : 'POST'
+      const url = editingAppointment ? `/api/appointments/${editingAppointment.id}` : '/api/appointments'
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error || 'Failed to save appointment')
       }
-
-      setIsModalOpen(false);
-      fetchAppointments();
-    } catch (error) {
-      console.error('Error saving appointment:', error);
+      await fetchAppointments()
+      setShowForm(false)
+      setEditingAppointment(null)
+      resetForm()
+      setSuccess(editingAppointment ? 'Appointment updated' : 'Appointment created')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
     }
-  };
+  }
 
-  const updateStatus = async (id: string, status: Appointment['status']) => {
+  const handleDelete = async (id: string) => {
+    if (!confirm('Cancel this appointment?')) return
     try {
-      const { error } = await supabase
-        .from('appointments')
-        .update({ status })
-        .eq('id', id);
-      if (error) throw error;
-      fetchAppointments();
-    } catch (error) {
-      console.error('Error updating status:', error);
+      const res = await fetch(`/api/appointments/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete')
+      await fetchAppointments()
+      setSuccess('Appointment cancelled')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err.message)
     }
-  };
+  }
+
+  const handleEdit = (apt: Appointment) => {
+    setEditingAppointment(apt)
+    setForm({
+      client_name: apt.client_name, client_email: apt.client_email || '',
+      client_phone: apt.client_phone || '', service: apt.service || '',
+      appointment_date: apt.appointment_date, appointment_time: apt.appointment_time,
+      duration: apt.duration || 30, notes: apt.notes || '', status: apt.status,
+    })
+    setShowForm(true)
+  }
+
+  const resetForm = () => {
+    setForm({ client_name: '', client_email: '', client_phone: '', service: '', appointment_date: '', appointment_time: '', duration: 30, notes: '', status: 'scheduled' })
+  }
+
+  const openAddForm = () => {
+    setEditingAppointment(null)
+    resetForm()
+    setShowForm(true)
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'scheduled': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+      case 'completed': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+      case 'cancelled': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+      case 'no_show': return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+      default: return 'bg-gray-100 text-gray-600'
+    }
+  }
+
+  const upcoming = appointments.filter(a => a.status === 'scheduled' && new Date(`${a.appointment_date}T${a.appointment_time}`) >= new Date())
+  const today = appointments.filter(a => a.appointment_date === new Date().toISOString().split('T')[0])
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Appointments</h1>
-          <p className="text-gray-500 dark:text-gray-400">Manage your bookings and schedule</p>
+    <DashboardLayout title="Appointments" subtitle="Schedule and manage your appointments">
+      {error && <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">{error}</div>}
+      {success && <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">{success}</div>}
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Today</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{today.length}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-            <button
-              onClick={() => setView('list')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                view === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600' : 'text-gray-500'
-              }`}
-            >
-              List
-            </button>
-            <button
-              onClick={() => setView('calendar')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                view === 'calendar' ? 'bg-white dark:bg-gray-700 shadow-sm text-blue-600' : 'text-gray-500'
-              }`}
-            >
-              Calendar
-            </button>
-          </div>
-          <button
-            onClick={() => {
-              setCurrentAppt({ status: 'pending', duration: 30 });
-              setIsModalOpen(true);
-            }}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          >
-            <PlusIcon className="w-5 h-5 mr-2" />
-            New Booking
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Upcoming</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{upcoming.length}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{appointments.length}</p>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex gap-2">
+          <button onClick={() => setView('list')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${view === 'list' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+            List
+          </button>
+          <button onClick={() => setView('calendar')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${view === 'calendar' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+            Calendar
           </button>
         </div>
+        <button onClick={openAddForm} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          + New Appointment
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Today's Overview</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Scheduled</span>
-                <span className="font-bold text-gray-900 dark:text-white">
-                  {appointments.filter(a => a.appointment_date === selectedDate).length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Completed</span>
-                <span className="font-bold text-green-600">
-                  {appointments.filter(a => a.appointment_date === selectedDate && a.status === 'completed').length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Cancelled</span>
-                <span className="font-bold text-red-600">
-                  {appointments.filter(a => a.appointment_date === selectedDate && a.status === 'cancelled').length}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:col-span-3">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => {
-                    const d = new Date(selectedDate);
-                    d.setDate(d.getDate() - 1);
-                    setSelectedDate(d.toISOString().split('T')[0]);
-                  }}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                >
-                  <ChevronLeftIcon className="w-5 h-5 text-gray-500" />
-                </button>
-                <h2 className="font-bold text-gray-900 dark:text-white">
-                  {new Date(selectedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </h2>
-                <button 
-                  onClick={() => {
-                    const d = new Date(selectedDate);
-                    d.setDate(d.getDate() + 1);
-                    setSelectedDate(d.toISOString().split('T')[0]);
-                  }}
-                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                >
-                  <ChevronRightIcon className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-              <input 
-                type="date" 
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="text-sm border-gray-300 dark:border-gray-600 rounded-md bg-transparent dark:text-white"
-              />
-            </div>
-
-            <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {loading ? (
-                <div className="p-12 text-center text-gray-500">Loading schedule...</div>
-              ) : appointments.filter(a => a.appointment_date === selectedDate).length === 0 ? (
-                <div className="p-12 text-center text-gray-500">
-                  <CalendarIcon className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                  <p>No appointments scheduled for this day</p>
-                </div>
-              ) : (
-                appointments
-                  .filter(a => a.appointment_date === selectedDate)
-                  .map((appt) => (
-                    <div key={appt.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="text-sm font-bold text-gray-900 dark:text-white w-16">
-                          {appt.start_time}
-                        </div>
-                        <div className="h-10 w-0.5 bg-blue-500 rounded-full"></div>
-                        <div>
-                          <div className="font-semibold text-gray-900 dark:text-white">{appt.client_name}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">{appt.service_type} ({appt.duration} min)</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[appt.status]}`}>
-                          {appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {appt.status !== 'completed' && (
-                            <button 
-                              onClick={() => updateStatus(appt.id, 'completed')}
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded"
-                              title="Complete"
-                            >
-                              <CheckCircle2Icon className="w-5 h-5" />
-                            </button>
-                          )}
-                          {appt.status !== 'cancelled' && (
-                            <button 
-                              onClick={() => updateStatus(appt.id, 'cancelled')}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded"
-                              title="Cancel"
-                            >
-                              <XCircleIcon className="w-5 h-5" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {currentAppt?.id ? 'Edit Appointment' : 'New Booking'}
-              </h3>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleSaveAppointment} className="p-6 space-y-4">
+      {/* Modal Form */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{editingAppointment ? 'Edit Appointment' : 'New Appointment'}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Name</label>
-                  <input
-                    required
-                    type="text"
-                    value={currentAppt?.client_name || ''}
-                    onChange={(e) => setCurrentAppt({ ...currentAppt, client_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Type</label>
-                  <input
-                    required
-                    type="text"
-                    value={currentAppt?.service_type || ''}
-                    onChange={(e) => setCurrentAppt({ ...currentAppt, service_type: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Name *</label>
+                  <input required value={form.client_name} onChange={e => setForm({...form, client_name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                  <input
-                    required
-                    type="date"
-                    value={currentAppt?.appointment_date || ''}
-                    onChange={(e) => setCurrentAppt({ ...currentAppt, appointment_date: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Email</label>
+                  <input type="email" value={form.client_email} onChange={e => setForm({...form, client_email: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date *</label>
+                  <input required type="date" value={form.appointment_date} onChange={e => setForm({...form, appointment_date: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Time</label>
-                  <input
-                    required
-                    type="time"
-                    value={currentAppt?.start_time || ''}
-                    onChange={(e) => setCurrentAppt({ ...currentAppt, start_time: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time *</label>
+                  <input required type="time" value={form.appointment_time} onChange={e => setForm({...form, appointment_time: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service</label>
+                  <select value={form.service} onChange={e => setForm({...form, service: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <option value="">Select service</option>
+                    <option value="consultation">Consultation</option>
+                    <option value="demo">Product Demo</option>
+                    <option value="setup">System Setup</option>
+                    <option value="support">Support Call</option>
+                    <option value="training">Training Session</option>
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (min)</label>
-                  <input
-                    required
-                    type="number"
-                    value={currentAppt?.duration || 30}
-                    onChange={(e) => setCurrentAppt({ ...currentAppt, duration: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                  <select
-                    value={currentAppt?.status || 'pending'}
-                    onChange={(e) => setCurrentAppt({ ...currentAppt, status: e.target.value as Appointment['status'] })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (mins)</label>
+                  <select value={form.duration} onChange={e => setForm({...form, duration: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <option value={15}>15 minutes</option>
+                    <option value={30}>30 minutes</option>
+                    <option value={45}>45 minutes</option>
+                    <option value={60}>1 hour</option>
+                    <option value={90}>1.5 hours</option>
                   </select>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium"
-                >
-                  Cancel
+              {editingAppointment && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                  <select value={form.status} onChange={e => setForm({...form, status: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <option value="scheduled">Scheduled</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="no_show">No Show</option>
+                  </select>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+                <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
+                  {saving ? 'Saving...' : (editingAppointment ? 'Update' : 'Create Appointment')}
                 </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
-                >
-                  {currentAppt?.id ? 'Update' : 'Schedule'}
-                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-white py-2 rounded-lg font-medium transition-colors">Cancel</button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
-  );
+
+      {/* Appointments List */}
+      {loading ? (
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading appointments...</div>
+      ) : appointments.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <p className="text-gray-500 dark:text-gray-400 text-lg">No appointments yet</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Click &quot;New Appointment&quot; to schedule one</p>
+        </div>
+      ) : view === 'list' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Client</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date & Time</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">Service</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {appointments.map(apt => (
+                  <tr key={apt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-gray-900 dark:text-white">{apt.client_name}</div>
+                      {apt.client_email && <div className="text-xs text-gray-500 dark:text-gray-400">{apt.client_email}</div>}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 dark:text-white">{new Date(apt.appointment_date).toLocaleDateString('en-GB')}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{apt.appointment_time} ({apt.duration || 30} mins)</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 hidden md:table-cell capitalize">{apt.service || '-'}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(apt.status)}`}>
+                        {apt.status.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => handleEdit(apt)} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 text-sm mr-3">Edit</button>
+                      <button onClick={() => handleDelete(apt.id)} className="text-red-600 dark:text-red-400 hover:text-red-700 text-sm">Cancel</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        /* Calendar View - Simple month grid */
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Calendar View</h3>
+          <div className="space-y-3">
+            {Array.from(new Set(appointments.map(a => a.appointment_date))).sort().map(date => (
+              <div key={date} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-2">{new Date(date).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h4>
+                <div className="space-y-2">
+                  {appointments.filter(a => a.appointment_date === date).map(apt => (
+                    <div key={apt.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 rounded-lg px-3 py-2">
+                      <div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{apt.appointment_time}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300 ml-3">{apt.client_name}</span>
+                        {apt.service && <span className="text-xs text-gray-400 ml-2 capitalize">- {apt.service}</span>}
+                      </div>
+                      <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${getStatusColor(apt.status)}`}>{apt.status}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
+  )
 }

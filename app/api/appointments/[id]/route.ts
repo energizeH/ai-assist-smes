@@ -3,26 +3,6 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const supabase = createRouteHandlerClient({ cookies })
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('id', params.id)
-      .eq('user_id', session.user.id)
-      .single()
-
-    if (error) throw error
-    return NextResponse.json({ client: data })
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -30,18 +10,18 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { name, email, phone, company, status, notes } = body
+    const { client_name, client_email, client_phone, service, appointment_date, appointment_time, duration, notes, status } = body
 
     const { data, error } = await supabase
-      .from('clients')
-      .update({ name, email, phone, company, status, notes })
+      .from('appointments')
+      .update({ client_name, client_email, client_phone, service, appointment_date, appointment_time, duration, notes, status })
       .eq('id', params.id)
       .eq('user_id', session.user.id)
       .select()
       .single()
 
     if (error) throw error
-    return NextResponse.json({ client: data })
+    return NextResponse.json({ appointment: data })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -54,7 +34,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { error } = await supabase
-      .from('clients')
+      .from('appointments')
       .delete()
       .eq('id', params.id)
       .eq('user_id', session.user.id)

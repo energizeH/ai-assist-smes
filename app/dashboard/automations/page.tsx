@@ -1,309 +1,273 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { 
-  ZapIcon, 
-  MessageSquareIcon, 
-  MailIcon, 
-  PhoneIcon,
-  PlusIcon,
-  PlayIcon,
-  PauseIcon,
-  TrashIcon,
-  SettingsIcon,
-  ArrowRightIcon,
-  ClockIcon,
-  CheckCircle2Icon
-} from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import DashboardLayout from '../../components/DashboardLayout'
 
 interface Automation {
-  id: string;
-  name: string;
-  trigger_event: string;
-  action_type: 'whatsapp' | 'email' | 'sms' | 'webhook';
-  action_content: string;
-  is_active: boolean;
-  run_count: number;
-  last_run: string;
+  id: string
+  name: string
+  type: string
+  trigger_event: string
+  action_description: string
+  is_active: boolean
+  created_at: string
 }
 
-const triggerOptions = [
-  { value: 'new_lead', label: 'New Lead Captured' },
-  { value: 'appointment_scheduled', label: 'Appointment Scheduled' },
-  { value: 'appointment_confirmed', label: 'Appointment Confirmed' },
-  { value: 'appointment_cancelled', label: 'Appointment Cancelled' },
-  { value: 'client_created', label: 'Client Created' }
-];
+const automationTypes = [
+  { id: 'email', label: 'Email' },
+  { id: 'sms', label: 'SMS' },
+  { id: 'whatsapp', label: 'WhatsApp' },
+  { id: 'webhook', label: 'Webhook' },
+]
 
-const actionOptions = [
-  { value: 'whatsapp', label: 'Send WhatsApp Message', icon: MessageSquareIcon, color: 'text-green-500' },
-  { value: 'email', label: 'Send Email Notification', icon: MailIcon, color: 'text-blue-500' },
-  { value: 'sms', label: 'Send SMS Alert', icon: PhoneIcon, color: 'text-purple-500' }
-];
+const triggerEvents = [
+  { id: 'new_lead', label: 'New Lead Created' },
+  { id: 'new_client', label: 'New Client Added' },
+  { id: 'appointment_booked', label: 'Appointment Booked' },
+  { id: 'form_submitted', label: 'Form Submitted' },
+  { id: 'lead_qualified', label: 'Lead Qualified' },
+]
 
 export default function AutomationsPage() {
-  const [automations, setAutomations] = useState<Automation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentAutomation, setCurrentAutomation] = useState<Partial<Automation> | null>(null);
-  const supabase = createClientComponentClient();
+  const [automations, setAutomations] = useState<Automation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [editingAutomation, setEditingAutomation] = useState<Automation | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    name: '', type: 'email', trigger_event: 'new_lead', action_description: '', is_active: true
+  })
+  const supabase = createClientComponentClient()
 
-  useEffect(() => {
-    fetchAutomations();
-  }, []);
+  useEffect(() => { fetchAutomations() }, [])
 
   const fetchAutomations = async () => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data, error: err } = await supabase
         .from('automations')
         .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setAutomations(data || []);
-    } catch (error) {
-      console.error('Error fetching automations:', error);
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      if (err) throw err
+      setAutomations(data || [])
+    } catch (err: any) {
+      setError(err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleSaveAutomation = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
 
-      const automationData = {
-        ...currentAutomation,
-        user_id: user.id,
-      };
-
-      if (currentAutomation?.id) {
-        const { error } = await supabase
+      if (editingAutomation) {
+        const { error: err } = await supabase
           .from('automations')
-          .update(automationData)
-          .eq('id', currentAutomation.id);
-        if (error) throw error;
+          .update({ ...form })
+          .eq('id', editingAutomation.id)
+          .eq('user_id', user.id)
+        if (err) throw err
       } else {
-        const { error } = await supabase
+        const { error: err } = await supabase
           .from('automations')
-          .insert([automationData]);
-        if (error) throw error;
+          .insert([{ ...form, user_id: user.id }])
+        if (err) throw err
       }
-
-      setIsModalOpen(false);
-      fetchAutomations();
-    } catch (error) {
-      console.error('Error saving automation:', error);
+      await fetchAutomations()
+      setShowForm(false)
+      setEditingAutomation(null)
+      resetForm()
+      setSuccess(editingAutomation ? 'Automation updated' : 'Automation created')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
     }
-  };
+  }
 
-  const toggleStatus = async (id: string, currentStatus: boolean) => {
+  const handleToggle = async (id: string, currentState: boolean) => {
     try {
-      const { error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { error: err } = await supabase
         .from('automations')
-        .update({ is_active: !currentStatus })
-        .eq('id', id);
-      if (error) throw error;
-      fetchAutomations();
-    } catch (error) {
-      console.error('Error toggling status:', error);
+        .update({ is_active: !currentState })
+        .eq('id', id)
+        .eq('user_id', user.id)
+      if (err) throw err
+      await fetchAutomations()
+    } catch (err: any) {
+      setError(err.message)
     }
-  };
+  }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this automation?')) return;
+    if (!confirm('Delete this automation?')) return
     try {
-      const { error } = await supabase
-        .from('automations')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-      fetchAutomations();
-    } catch (error) {
-      console.error('Error deleting automation:', error);
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { error: err } = await supabase.from('automations').delete().eq('id', id).eq('user_id', user.id)
+      if (err) throw err
+      await fetchAutomations()
+      setSuccess('Automation deleted')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err.message)
     }
-  };
+  }
+
+  const handleEdit = (auto: Automation) => {
+    setEditingAutomation(auto)
+    setForm({
+      name: auto.name, type: auto.type, trigger_event: auto.trigger_event,
+      action_description: auto.action_description, is_active: auto.is_active,
+    })
+    setShowForm(true)
+  }
+
+  const resetForm = () => {
+    setForm({ name: '', type: 'email', trigger_event: 'new_lead', action_description: '', is_active: true })
+  }
+
+  const openAddForm = () => {
+    setEditingAutomation(null)
+    resetForm()
+    setShowForm(true)
+  }
+
+  const activeCount = automations.filter(a => a.is_active).length
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Workflow Automations</h1>
-          <p className="text-gray-500 dark:text-gray-400">Automate your business processes and notifications</p>
+    <DashboardLayout title="Automations" subtitle="Create workflows that run automatically">
+      {error && <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">{error}</div>}
+      {success && <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">{success}</div>}
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Automations</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{automations.length}</p>
         </div>
-        <button
-          onClick={() => {
-            setCurrentAutomation({ is_active: true, action_type: 'whatsapp' });
-            setIsModalOpen(true);
-          }}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-lg shadow-blue-500/20"
-        >
-          <PlusIcon className="w-5 h-5 mr-2" />
-          Create Automation
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Active</p>
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{activeCount}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Paused</p>
+          <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{automations.length - activeCount}</p>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex justify-end mb-6">
+        <button onClick={openAddForm} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          + New Automation
         </button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-20 text-gray-500">Loading your workflows...</div>
-      ) : automations.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-12 text-center">
-          <ZapIcon className="w-16 h-16 mx-auto mb-4 text-blue-500 opacity-20" />
-          <h2 className="text-xl font-bold mb-2">No Automations Yet</h2>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            Build your first workflow to automate messages, emails, and lead follow-ups.
-          </p>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="text-blue-600 font-bold hover:underline"
-          >
-            Create your first workflow
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {automations.map((auto) => (
-            <div key={auto.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col transition-all hover:shadow-md">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-2 rounded-lg bg-gray-50 dark:bg-gray-900`}>
-                  {actionOptions.find(opt => opt.value === auto.action_type)?.icon({ 
-                    className: `w-6 h-6 ${actionOptions.find(opt => opt.value === auto.action_type)?.color}` 
-                  })}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => toggleStatus(auto.id, auto.is_active)}
-                    className={`p-1.5 rounded-full transition-colors ${
-                      auto.is_active ? 'text-green-500 bg-green-50 dark:bg-green-900/20' : 'text-gray-400 bg-gray-50 dark:bg-gray-900'
-                    }`}
-                  >
-                    {auto.is_active ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(auto.id)}
-                    className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
-                  >
-                    <TrashIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{auto.name}</h3>
-              <p className="text-sm text-gray-500 mb-4 flex items-center">
-                <ClockIcon className="w-4 h-4 mr-1" /> Triggered by: {triggerOptions.find(t => t.value === auto.trigger_event)?.label}
-              </p>
-
-              <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-400 uppercase font-semibold">Total Runs</span>
-                  <span className="text-lg font-bold">{auto.run_count || 0}</span>
-                </div>
-                <button 
-                  onClick={() => {
-                    setCurrentAutomation(auto);
-                    setIsModalOpen(true);
-                  }}
-                  className="text-gray-400 hover:text-blue-600 transition-colors"
-                >
-                  <SettingsIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {currentAutomation?.id ? 'Edit Workflow' : 'New Automation'}
-              </h3>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-500 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleSaveAutomation} className="p-6 space-y-6">
+      {/* Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{editingAutomation ? 'Edit Automation' : 'New Automation'}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Automation Name</label>
-                <input
-                  required
-                  type="text"
-                  placeholder="e.g., Welcome New Leads"
-                  value={currentAutomation?.name || ''}
-                  onChange={(e) => setCurrentAutomation({ ...currentAutomation, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500"
-                />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
+                <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+                  placeholder="e.g. Welcome email for new leads"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Trigger Event</label>
-                  <select
-                    value={currentAutomation?.trigger_event || 'new_lead'}
-                    onChange={(e) => setCurrentAutomation({ ...currentAutomation, trigger_event: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500"
-                  >
-                    {triggerOptions.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                  <select value={form.type} onChange={e => setForm({...form, type: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    {automationTypes.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Action Type</label>
-                  <select
-                    value={currentAutomation?.action_type || 'whatsapp'}
-                    onChange={(e) => setCurrentAutomation({ ...currentAutomation, action_type: e.target.value as Automation['action_type'] })}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500"
-                  >
-                    {actionOptions.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trigger</label>
+                  <select value={form.trigger_event} onChange={e => setForm({...form, trigger_event: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    {triggerEvents.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                   </select>
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Message Content</label>
-                <textarea
-                  required
-                  placeholder="Type the message you want to send..."
-                  value={currentAutomation?.action_content || ''}
-                  onChange={(e) => setCurrentAutomation({ ...currentAutomation, action_content: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900 h-32 focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="mt-2 text-xs text-gray-400">
-                  Tip: Use <span className="text-blue-500">{"{name}"}</span> to include the person's name dynamically.
-                </p>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Action Description *</label>
+                <textarea required value={form.action_description} onChange={e => setForm({...form, action_description: e.target.value})} rows={3}
+                  placeholder="Describe what this automation does..."
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
               </div>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2.5 text-gray-600 dark:text-gray-400 font-semibold"
-                >
-                  Cancel
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setForm({...form, is_active: !form.is_active})}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${form.is_active ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.is_active ? 'translate-x-6' : 'translate-x-0.5'}`} />
                 </button>
-                <button
-                  type="submit"
-                  className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 flex items-center"
-                >
-                  {currentAutomation?.id ? 'Update' : 'Activate'} Workflow
-                  <ArrowRightIcon className="w-5 h-5 ml-2" />
+                <span className="text-sm text-gray-700 dark:text-gray-300">{form.is_active ? 'Active' : 'Paused'}</span>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
+                  {saving ? 'Saving...' : (editingAutomation ? 'Update' : 'Create Automation')}
                 </button>
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-white py-2 rounded-lg font-medium transition-colors">Cancel</button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
-  );
+
+      {/* Automations List */}
+      {loading ? (
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading automations...</div>
+      ) : automations.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <p className="text-3xl mb-3">⚡</p>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">No automations yet</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Create your first automation to streamline your workflows</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {automations.map(auto => (
+            <div key={auto.id} className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <button onClick={() => handleToggle(auto.id, auto.is_active)}
+                  className={`relative mt-1 w-10 h-5 rounded-full transition-colors flex-shrink-0 ${auto.is_active ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${auto.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </button>
+                <div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">{auto.name}</h3>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium capitalize">{auto.type}</span>
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 font-medium">
+                      {triggerEvents.find(t => t.id === auto.trigger_event)?.label || auto.trigger_event}
+                    </span>
+                    <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${auto.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
+                      {auto.is_active ? 'Active' : 'Paused'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{auto.action_description}</p>
+                </div>
+              </div>
+              <div className="flex gap-2 flex-shrink-0">
+                <button onClick={() => handleEdit(auto)} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 text-sm font-medium">Edit</button>
+                <button onClick={() => handleDelete(auto.id)} className="text-red-600 dark:text-red-400 hover:text-red-700 text-sm font-medium">Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </DashboardLayout>
+  )
 }

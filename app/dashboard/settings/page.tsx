@@ -1,193 +1,367 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { 
-  UserIcon, 
-  BellIcon, 
-  ShieldIcon, 
-  SmartphoneIcon,
-  GlobeIcon,
-  SaveIcon,
-  Loader2Icon,
-  CheckCircle2Icon,
-  AlertCircleIcon
-} from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import DashboardLayout from '../../components/DashboardLayout'
 
 export default function SettingsPage() {
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const supabase = createClientComponentClient();
+  const [activeTab, setActiveTab] = useState('profile')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const supabase = createClientComponentClient()
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  // Profile state
+  const [profile, setProfile] = useState({ full_name: '', email: '', company: '', phone: '' })
 
-  const fetchProfile = async () => {
+  // Password state
+  const [passwords, setPasswords] = useState({ new_password: '', confirm_password: '' })
+
+  // Notifications state
+  const [notifications, setNotifications] = useState({
+    email_notifications: true, sms_notifications: false, lead_alerts: true, appointment_reminders: true,
+  })
+
+  // API Keys state
+  const [apiKeys, setApiKeys] = useState({
+    whatsapp_api_key: '', twilio_sid: '', twilio_auth_token: '', sendgrid_api_key: '',
+    zapier_webhook_url: '', google_calendar_key: '',
+  })
+
+  useEffect(() => { fetchSettings() }, [])
+
+  const fetchSettings = async () => {
     try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-      const { data, error } = await supabase
+      setProfile({
+        full_name: user.user_metadata?.full_name || '',
+        email: user.email || '',
+        company: user.user_metadata?.company || '',
+        phone: user.user_metadata?.phone || '',
+      })
+
+      // Try to fetch profile from profiles table
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .single()
 
-      if (error && error.code !== 'PGRST116') throw error;
-      setProfile(data || { full_name: user.user_metadata?.full_name || '', email: user.email });
-    } catch (error) {
-      console.error('Error fetching profile:', error);
+      if (profileData) {
+        setProfile(prev => ({
+          ...prev,
+          full_name: profileData.full_name || prev.full_name,
+          company: profileData.company || prev.company,
+          phone: profileData.phone || prev.phone,
+        }))
+      }
+
+      // Fetch API keys from user_settings
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (settings) {
+        setNotifications({
+          email_notifications: settings.email_notifications ?? true,
+          sms_notifications: settings.sms_notifications ?? false,
+          lead_alerts: settings.lead_alerts ?? true,
+          appointment_reminders: settings.appointment_reminders ?? true,
+        })
+        setApiKeys({
+          whatsapp_api_key: settings.whatsapp_api_key || '',
+          twilio_sid: settings.twilio_sid || '',
+          twilio_auth_token: settings.twilio_auth_token || '',
+          sendgrid_api_key: settings.sendgrid_api_key || '',
+          zapier_webhook_url: settings.zapier_webhook_url || '',
+          google_calendar_key: settings.google_calendar_key || '',
+        })
+      }
+    } catch (err) {
+      console.error('Settings fetch error:', err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage(null);
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setMessage({ type, text })
+    setTimeout(() => setMessage(null), 4000)
+  }
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          ...profile,
-          updated_at: new Date().toISOString(),
-        });
+      // Update auth metadata
+      await supabase.auth.updateUser({
+        data: { full_name: profile.full_name, company: profile.company, phone: profile.phone },
+      })
 
-      if (error) throw error;
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+      // Upsert profiles table
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        full_name: profile.full_name,
+        company: profile.company,
+        phone: profile.phone,
+        email: profile.email,
+      })
+
+      showMessage('success', 'Profile updated successfully')
+    } catch (err: any) {
+      showMessage('error', err.message || 'Failed to update profile')
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Loading settings...</div>;
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (passwords.new_password !== passwords.confirm_password) {
+      showMessage('error', 'Passwords do not match')
+      return
+    }
+    if (passwords.new_password.length < 6) {
+      showMessage('error', 'Password must be at least 6 characters')
+      return
+    }
+    setSaving(true)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: passwords.new_password })
+      if (error) throw error
+      setPasswords({ new_password: '', confirm_password: '' })
+      showMessage('success', 'Password updated successfully')
+    } catch (err: any) {
+      showMessage('error', err.message || 'Failed to update password')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveNotifications = async () => {
+    setSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      await supabase.from('user_settings').upsert({
+        user_id: user.id,
+        ...notifications,
+      })
+      showMessage('success', 'Notification preferences saved')
+    } catch (err: any) {
+      showMessage('error', err.message || 'Failed to save notifications')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveApiKeys = async () => {
+    setSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      await supabase.from('user_settings').upsert({
+        user_id: user.id,
+        ...apiKeys,
+      })
+      showMessage('success', 'API keys saved securely')
+    } catch (err: any) {
+      showMessage('error', err.message || 'Failed to save API keys')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const tabs = [
+    { id: 'profile', label: 'Profile', icon: '👤' },
+    { id: 'password', label: 'Password', icon: '🔒' },
+    { id: 'notifications', label: 'Notifications', icon: '🔔' },
+    { id: 'integrations', label: 'Integrations', icon: '🔗' },
+  ]
+
+  const inputClass = "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Account Settings</h1>
-        <p className="text-gray-500 dark:text-gray-400">Manage your profile and platform preferences</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* Navigation */}
-        <div className="md:col-span-1 space-y-1">
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
-            <UserIcon className="w-4 h-4" /> Profile
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg">
-            <BellIcon className="w-4 h-4" /> Notifications
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg">
-            <ShieldIcon className="w-4 h-4" /> Security
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg">
-            <SmartphoneIcon className="w-4 h-4" /> AI Agents
-          </button>
+    <DashboardLayout title="Settings" subtitle="Manage your account and integrations">
+      {message && (
+        <div className={`mb-6 px-4 py-3 rounded-lg text-sm ${
+          message.type === 'success'
+            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+            : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
+        }`}>
+          {message.text}
         </div>
+      )}
 
-        {/* Content */}
-        <div className="md:col-span-3">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-bold">Personal Information</h2>
-              <p className="text-sm text-gray-500">Update your account details and contact information.</p>
-            </div>
-            
-            <form onSubmit={handleUpdateProfile} className="p-6 space-y-6">
-              {message && (
-                <div className={`p-4 rounded-xl flex items-center gap-3 ${
-                  message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                }`}>
-                  {message.type === 'success' ? <CheckCircle2Icon className="w-5 h-5" /> : <AlertCircleIcon className="w-5 h-5" />}
-                  <span className="text-sm font-medium">{message.text}</span>
-                </div>
-              )}
+      {loading ? (
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading settings...</div>
+      ) : (
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar Tabs */}
+          <div className="md:w-56 flex-shrink-0">
+            <nav className="flex md:flex-col gap-1 overflow-x-auto">
+              {tabs.map(tab => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}>
+                  <span>{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    value={profile?.full_name || ''}
-                    onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
-                  <input
-                    disabled
-                    type="email"
-                    value={profile?.email || ''}
-                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Name</label>
-                  <input
-                    type="text"
-                    value={profile?.business_name || ''}
-                    onChange={(e) => setProfile({ ...profile, business_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-                  <input
-                    type="tel"
-                    value={profile?.phone || ''}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+          {/* Content */}
+          <div className="flex-1 max-w-2xl">
+            {/* Profile */}
+            {activeTab === 'profile' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Profile Information</h2>
+                <form onSubmit={handleSaveProfile} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                    <input value={profile.full_name} onChange={e => setProfile({...profile, full_name: e.target.value})} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                    <input value={profile.email} disabled className={`${inputClass} opacity-60 cursor-not-allowed`} />
+                    <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company</label>
+                    <input value={profile.company} onChange={e => setProfile({...profile, company: e.target.value})} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+                    <input value={profile.phone} onChange={e => setProfile({...profile, phone: e.target.value})} className={inputClass} />
+                  </div>
+                  <button type="submit" disabled={saving}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                    {saving ? 'Saving...' : 'Save Profile'}
+                  </button>
+                </form>
               </div>
+            )}
 
-              <div className="pt-6 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="inline-flex items-center px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all disabled:opacity-50"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2Icon className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <SaveIcon className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
+            {/* Password */}
+            {activeTab === 'password' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Change Password</h2>
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
+                    <input type="password" required minLength={6} value={passwords.new_password}
+                      onChange={e => setPasswords({...passwords, new_password: e.target.value})} className={inputClass}
+                      placeholder="Min 6 characters" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
+                    <input type="password" required minLength={6} value={passwords.confirm_password}
+                      onChange={e => setPasswords({...passwords, confirm_password: e.target.value})} className={inputClass}
+                      placeholder="Repeat your new password" />
+                  </div>
+                  <button type="submit" disabled={saving}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                    {saving ? 'Updating...' : 'Update Password'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Notifications */}
+            {activeTab === 'notifications' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Notification Preferences</h2>
+                <div className="space-y-5">
+                  {[
+                    { key: 'email_notifications', label: 'Email Notifications', desc: 'Receive email updates about your account' },
+                    { key: 'sms_notifications', label: 'SMS Notifications', desc: 'Get text message alerts' },
+                    { key: 'lead_alerts', label: 'Lead Alerts', desc: 'Get notified when new leads come in' },
+                    { key: 'appointment_reminders', label: 'Appointment Reminders', desc: 'Reminders before scheduled appointments' },
+                  ].map(item => (
+                    <div key={item.key} className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{item.label}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{item.desc}</p>
+                      </div>
+                      <button
+                        onClick={() => setNotifications({ ...notifications, [item.key]: !notifications[item.key as keyof typeof notifications] })}
+                        className={`relative w-11 h-6 rounded-full transition-colors ${
+                          notifications[item.key as keyof typeof notifications] ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                        }`}>
+                        <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                          notifications[item.key as keyof typeof notifications] ? 'translate-x-5' : 'translate-x-0.5'
+                        }`} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={handleSaveNotifications} disabled={saving}
+                  className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  {saving ? 'Saving...' : 'Save Preferences'}
                 </button>
               </div>
-            </form>
-          </div>
+            )}
 
-          <div className="mt-8 p-6 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30">
-            <h3 className="text-red-800 dark:text-red-400 font-bold mb-2">Danger Zone</h3>
-            <p className="text-red-600/80 dark:text-red-400/60 text-sm mb-4">
-              Once you delete your account, there is no going back. Please be certain.
-            </p>
-            <button className="px-4 py-2 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 font-bold rounded-xl hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors">
-              Delete Account
-            </button>
+            {/* Integrations */}
+            {activeTab === 'integrations' && (
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">API Integrations</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Connect your external services to enable automations</p>
+
+                  <div className="space-y-5">
+                    {[
+                      { key: 'whatsapp_api_key', label: 'WhatsApp Business API Key', icon: '💬', placeholder: 'Enter your WhatsApp API key' },
+                      { key: 'twilio_sid', label: 'Twilio Account SID', icon: '📱', placeholder: 'ACxxxxx...' },
+                      { key: 'twilio_auth_token', label: 'Twilio Auth Token', icon: '📱', placeholder: 'Your Twilio auth token' },
+                      { key: 'sendgrid_api_key', label: 'SendGrid API Key', icon: '📧', placeholder: 'SG.xxxxx...' },
+                      { key: 'zapier_webhook_url', label: 'Zapier Webhook URL', icon: '⚡', placeholder: 'https://hooks.zapier.com/...' },
+                      { key: 'google_calendar_key', label: 'Google Calendar API Key', icon: '📅', placeholder: 'Your Google Calendar API key' },
+                    ].map(item => (
+                      <div key={item.key}>
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <span>{item.icon}</span> {item.label}
+                        </label>
+                        <input
+                          type="password"
+                          value={apiKeys[item.key as keyof typeof apiKeys]}
+                          onChange={e => setApiKeys({...apiKeys, [item.key]: e.target.value})}
+                          placeholder={item.placeholder}
+                          className={inputClass}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <button onClick={handleSaveApiKeys} disabled={saving}
+                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                    {saving ? 'Saving...' : 'Save API Keys'}
+                  </button>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
+                  <p className="text-sm text-blue-700 dark:text-blue-400">
+                    <strong>Security:</strong> API keys are stored securely and encrypted. They are only used to connect your external services.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
-    </div>
-  );
+      )}
+    </DashboardLayout>
+  )
 }

@@ -1,72 +1,138 @@
 @tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Light mode defaults */
+  body {
+    @apply text-gray-900 bg-white antialiased;
+  }
+
+  /* Dark mode overrides */
+  .dark body,
+  html.dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+
+  /* Ensure all text is visible in dark mode */
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    @apply text-white;
+  }
+
+  .dark p {
+    @apply text-gray-300;
+  }
+
+  .dark label {
+    @apply text-gray-300;
+  }
+
+  /* Fix input visibility in both modes */
+  input, textarea, select {
+    @apply text-gray-900 bg-white;
+  }
+
+  .dark input, .dark textarea, .dark select {
+    @apply text-white bg-gray-800 border-gray-600;
+  }
+
+  .dark input::placeholder, .dark textarea::placeholder {
+    @apply text-gray-400;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-300;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-300;
+  }
+
+  .dark .btn-secondary {
+    @apply bg-gray-700 text-gray-100 hover:bg-gray-600;
+  }
+
+  .btn-outline {
+    @apply border-2 border-blue-600 text-blue-600 hover:bg-blue-50 focus:ring-blue-300;
+  }
+
+  .dark .btn-outline {
+    @apply border-blue-400 text-blue-400 hover:bg-blue-900/30;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition;
+  }
+
+  .dark .input {
+    @apply text-white bg-gray-800 border-gray-600;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6;
+  }
+
+  .dark .card {
+    @apply bg-gray-800 border border-gray-700;
+  }
+
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
 
 /* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Smooth transitions for dark mode */
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Smooth theme transitions */
 * {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-}
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  body {
-    @apply text-gray-900 bg-white antialiased;
-  }
-  
-  h1 {
-    @apply text-4xl font-bold;
-  }
-  
-  h2 {
-    @apply text-3xl font-bold;
-  }
-  
-  h3 {
-    @apply text-2xl font-semibold;
-  }
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-@layer components {
-  .btn {
-    @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2;
-  }
-  
-  .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-200;
-  }
-  
-  .btn-secondary {
-    @apply bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-100;
-  }
-  
-  .btn-outline {
-    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-200;
-  }
-  
-  .input {
-    @apply w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition;
-  }
-  
-  .card {
-    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6;
-  }
-  
-  .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+.dark ::-webkit-scrollbar-track {
+  @apply bg-gray-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full;
 }

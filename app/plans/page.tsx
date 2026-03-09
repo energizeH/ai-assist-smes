@@ -25,8 +25,8 @@ const plans = [
   },
   {
     name: 'Professional',
-    price: '£99',
-    annualPrice: '£79',
+    price: '£149',
+    annualPrice: '£119',
     period: '/month',
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
     description: 'Ideal for growing businesses seeking advanced automation',

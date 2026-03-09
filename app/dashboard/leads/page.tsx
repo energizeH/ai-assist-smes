@@ -1,369 +1,298 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { 
-  PlusIcon, 
-  SearchIcon, 
-  FilterIcon,
-  ChevronRightIcon,
-  MoreVerticalIcon,
-  UserIcon,
-  MailIcon,
-  PhoneIcon,
-  BuildingIcon,
-  ClockIcon,
-  TrendingUpIcon,
-  AlertCircleIcon
-} from 'lucide-react';
+import { useState, useEffect } from 'react'
+import DashboardLayout from '../../components/DashboardLayout'
 
 interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
-  source: string;
-  value: number;
-  last_contacted: string;
-  created_at: string;
+  id: string
+  name: string
+  email: string
+  phone?: string
+  company?: string
+  status: string
+  source?: string
+  value?: number
+  notes?: string
+  created_at: string
 }
 
 const pipelineStages = [
-  { id: 'new', label: 'New', color: 'bg-blue-100 text-blue-800' },
-  { id: 'contacted', label: 'Contacted', color: 'bg-indigo-100 text-indigo-800' },
-  { id: 'qualified', label: 'Qualified', color: 'bg-purple-100 text-purple-800' },
-  { id: 'proposal', label: 'Proposal', color: 'bg-yellow-100 text-yellow-800' },
-  { id: 'negotiation', label: 'Negotiation', color: 'bg-orange-100 text-orange-800' },
-  { id: 'closed_won', label: 'Won', color: 'bg-green-100 text-green-800' },
-  { id: 'closed_lost', label: 'Lost', color: 'bg-red-100 text-red-800' }
-];
+  { id: 'new', label: 'New', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  { id: 'contacted', label: 'Contacted', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400' },
+  { id: 'qualified', label: 'Qualified', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
+  { id: 'closed_won', label: 'Converted', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  { id: 'closed_lost', label: 'Lost', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+]
 
 export default function LeadsPage() {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentLead, setCurrentLead] = useState<Partial<Lead> | null>(null);
-  const supabase = createClientComponentClient();
-
-  useEffect(() => {
-    fetchLeads();
-  }, []);
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [editingLead, setEditingLead] = useState<Lead | null>(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', status: 'new', source: 'manual', value: 0, notes: '' })
+  const [saving, setSaving] = useState(false)
 
   const fetchLeads = async () => {
     try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setLeads(data || []);
-    } catch (error) {
-      console.error('Error fetching leads:', error);
+      const res = await fetch('/api/leads')
+      if (!res.ok) throw new Error('Failed to load leads')
+      const data = await res.json()
+      setLeads(data.leads || [])
+    } catch (err: any) {
+      setError(err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleSaveLead = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => { fetchLeads() }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const leadData = {
-        ...currentLead,
-        user_id: user.id,
-      };
-
-      if (currentLead?.id) {
-        const { error } = await supabase
-          .from('leads')
-          .update(leadData)
-          .eq('id', currentLead.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('leads')
-          .insert([leadData]);
-        if (error) throw error;
+      const method = editingLead ? 'PUT' : 'POST'
+      const url = editingLead ? `/api/leads/${editingLead.id}` : '/api/leads'
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error || 'Failed to save lead')
       }
-
-      setIsModalOpen(false);
-      fetchLeads();
-    } catch (error) {
-      console.error('Error saving lead:', error);
+      await fetchLeads()
+      setShowForm(false)
+      setEditingLead(null)
+      setForm({ name: '', email: '', phone: '', company: '', status: 'new', source: 'manual', value: 0, notes: '' })
+      setSuccess(editingLead ? 'Lead updated' : 'Lead added')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
     }
-  };
+  }
 
-  const handleDeleteLead = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this lead?')) return;
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this lead?')) return
     try {
-      const { error } = await supabase
-        .from('leads')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-      fetchLeads();
-    } catch (error) {
-      console.error('Error deleting lead:', error);
+      const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete')
+      await fetchLeads()
+      setSuccess('Lead deleted')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err.message)
     }
-  };
+  }
 
-  const filteredLeads = leads.filter(lead => {
-    const matchesSearch = 
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.company?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const handleConvert = async (id: string) => {
+    if (!confirm('Convert this lead to a client?')) return
+    try {
+      const res = await fetch(`/api/leads/${id}/convert`, { method: 'POST' })
+      if (!res.ok) {
+        const d = await res.json()
+        throw new Error(d.error || 'Failed to convert lead')
+      }
+      await fetchLeads()
+      setSuccess('Lead converted to client successfully')
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
 
-  const totalValue = filteredLeads.reduce((sum, lead) => sum + (lead.value || 0), 0);
+  const handleEdit = (lead: Lead) => {
+    setEditingLead(lead)
+    setForm({ name: lead.name, email: lead.email, phone: lead.phone || '', company: lead.company || '', status: lead.status, source: lead.source || 'manual', value: lead.value || 0, notes: lead.notes || '' })
+    setShowForm(true)
+  }
+
+  const openAddForm = () => {
+    setEditingLead(null)
+    setForm({ name: '', email: '', phone: '', company: '', status: 'new', source: 'manual', value: 0, notes: '' })
+    setShowForm(true)
+  }
+
+  const filtered = leads.filter(lead => {
+    const matchesSearch = lead.name.toLowerCase().includes(search.toLowerCase()) ||
+      lead.email.toLowerCase().includes(search.toLowerCase()) ||
+      (lead.company || '').toLowerCase().includes(search.toLowerCase())
+    const matchesStatus = statusFilter === 'all' || lead.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
+
+  const totalValue = filtered.reduce((sum, lead) => sum + (lead.value || 0), 0)
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Leads Management</h1>
-          <p className="text-gray-500 dark:text-gray-400">Track and manage your sales pipeline</p>
+    <DashboardLayout title="Lead Management" subtitle="Track and manage your sales pipeline">
+      {error && <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">{error}</div>}
+      {success && <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">{success}</div>}
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Leads</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{filtered.length}</p>
         </div>
-        <button
-          onClick={() => {
-            setCurrentLead({ status: 'new', value: 0 });
-            setIsModalOpen(true);
-          }}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-        >
-          <PlusIcon className="w-5 h-5 mr-2" />
-          Add New Lead
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Pipeline Value</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">£{totalValue.toLocaleString()}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Avg. Value</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            £{filtered.length ? Math.round(totalValue / filtered.length).toLocaleString() : 0}
+          </p>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <input type="text" placeholder="Search leads..." value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full sm:w-64 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="all">All Statuses</option>
+            {pipelineStages.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+        </div>
+        <button onClick={openAddForm} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+          + Add Lead
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500">Total Leads</span>
-            <TrendingUpIcon className="w-5 h-5 text-blue-500" />
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">{filteredLeads.length}</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500">Pipeline Value</span>
-            <TrendingUpIcon className="w-5 h-5 text-green-500" />
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">£{totalValue.toLocaleString()}</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500">Avg. Value</span>
-            <TrendingUpIcon className="w-5 h-5 text-purple-500" />
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            £{filteredLeads.length ? Math.round(totalValue / filteredLeads.length).toLocaleString() : 0}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search leads..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Statuses</option>
-            {pipelineStages.map(stage => (
-              <option key={stage.id} value={stage.id}>{stage.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 dark:bg-gray-900">
-                <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Lead Info</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Company</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Status</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Value</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Last Contact</th>
-                <th className="px-6 py-4 text-sm font-semibold text-gray-700 dark:text-gray-200 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">Loading leads...</td>
-                </tr>
-              ) : filteredLeads.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No leads found</td>
-                </tr>
-              ) : (
-                filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900 dark:text-white">{lead.name}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-0.5">
-                        <MailIcon className="w-3 h-3 mr-1" /> {lead.email}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                      {lead.company || '-'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                        pipelineStages.find(s => s.id === lead.status)?.color || 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {pipelineStages.find(s => s.id === lead.status)?.label || lead.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">
-                      £{lead.value?.toLocaleString() || '0'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                      {lead.last_contacted ? new Date(lead.last_contacted).toLocaleDateString() : 'Never'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => {
-                          setCurrentLead(lead);
-                          setIsModalOpen(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-700 font-medium text-sm mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteLead(lead.id)}
-                        className="text-red-600 hover:text-red-700 font-medium text-sm"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {currentLead?.id ? 'Edit Lead' : 'Add New Lead'}
-              </h3>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleSaveLead} className="p-6 space-y-4">
+      {/* Modal Form */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{editingLead ? 'Edit Lead' : 'Add New Lead'}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-                  <input
-                    required
-                    type="text"
-                    value={currentLead?.name || ''}
-                    onChange={(e) => setCurrentLead({ ...currentLead, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
+                  <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                  <input
-                    required
-                    type="email"
-                    value={currentLead?.email || ''}
-                    onChange={(e) => setCurrentLead({ ...currentLead, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
+                  <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    value={currentLead?.phone || ''}
-                    onChange={(e) => setCurrentLead({ ...currentLead, phone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
+                  <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company</label>
-                  <input
-                    type="text"
-                    value={currentLead?.company || ''}
-                    onChange={(e) => setCurrentLead({ ...currentLead, company: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lead Value (£)</label>
-                  <input
-                    type="number"
-                    value={currentLead?.value || 0}
-                    onChange={(e) => setCurrentLead({ ...currentLead, value: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pipeline Status</label>
-                  <select
-                    value={currentLead?.status || 'new'}
-                    onChange={(e) => setCurrentLead({ ...currentLead, status: e.target.value as Lead['status'] })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                  >
-                    {pipelineStages.map(stage => (
-                      <option key={stage.id} value={stage.id}>{stage.label}</option>
-                    ))}
-                  </select>
+                  <input value={form.company} onChange={e => setForm({...form, company: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium"
-                >
-                  Cancel
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stage</label>
+                  <select value={form.status} onChange={e => setForm({...form, status: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    {pipelineStages.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Value (£)</label>
+                  <input type="number" value={form.value} onChange={e => setForm({...form, value: parseInt(e.target.value) || 0})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source</label>
+                <select value={form.source} onChange={e => setForm({...form, source: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                  <option value="manual">Manual</option>
+                  <option value="website">Website</option>
+                  <option value="chatbot">Chatbot</option>
+                  <option value="referral">Referral</option>
+                  <option value="social_media">Social Media</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+                <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
+                  {saving ? 'Saving...' : (editingLead ? 'Update Lead' : 'Add Lead')}
                 </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
-                >
-                  {currentLead?.id ? 'Update Lead' : 'Create Lead'}
-                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-white py-2 rounded-lg font-medium transition-colors">Cancel</button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </div>
-  );
+
+      {/* Leads Table */}
+      {loading ? (
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading leads...</div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <p className="text-gray-500 dark:text-gray-400 text-lg">No leads yet</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Click &quot;Add Lead&quot; to start building your pipeline</p>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">Company</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Stage</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden sm:table-cell">Value</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {filtered.map(lead => {
+                  const stage = pipelineStages.find(s => s.id === lead.status)
+                  return (
+                    <tr key={lead.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-gray-900 dark:text-white">{lead.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{lead.email}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 hidden md:table-cell">{lead.company || '-'}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${stage?.color || 'bg-gray-100 text-gray-600'}`}>
+                          {stage?.label || lead.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 hidden sm:table-cell">
+                        £{(lead.value || 0).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => handleEdit(lead)} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 text-sm mr-2">Edit</button>
+                        {lead.status !== 'closed_won' && (
+                          <button onClick={() => handleConvert(lead.id)} className="text-green-600 dark:text-green-400 hover:text-green-700 text-sm mr-2">Convert</button>
+                        )}
+                        <button onClick={() => handleDelete(lead.id)} className="text-red-600 dark:text-red-400 hover:text-red-700 text-sm">Delete</button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </DashboardLayout>
+  )
 }

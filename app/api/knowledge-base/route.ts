@@ -10,13 +10,13 @@ export async function GET() {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data, error } = await supabase
-      .from('clients')
+      .from('knowledge_base')
       .select('*')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return NextResponse.json({ clients: data || [] })
+    return NextResponse.json({ entries: data || [] })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -29,37 +29,25 @@ export async function POST(request: NextRequest) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { name, email, phone, company, status, notes } = body
+    const { category, title, content } = body
 
-    if (!name || !email) {
-      return NextResponse.json({ error: 'Name and email are required' }, { status: 400 })
+    if (!category || !title || !content) {
+      return NextResponse.json({ error: 'Category, title, and content are required' }, { status: 400 })
     }
 
     const { data, error } = await supabase
-      .from('clients')
+      .from('knowledge_base')
       .insert([{
         user_id: session.user.id,
-        name,
-        email,
-        phone: phone || null,
-        company: company || null,
-        status: status || 'active',
-        notes: notes || null,
+        category,
+        title,
+        content,
       }])
       .select()
       .single()
 
     if (error) throw error
-
-    // Log activity
-    await supabase.from('activities').insert([{
-      user_id: session.user.id,
-      type: 'client',
-      title: `New client: ${name}`,
-      description: `${name} (${email}) was added as a client`,
-    }])
-
-    return NextResponse.json({ client: data }, { status: 201 })
+    return NextResponse.json({ entry: data }, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
