@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2023-10-16',
 });
 
 const supabase = createClient(
@@ -13,8 +13,12 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
-  const sig = req.headers.get('stripe-signature')!;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+  const sig = req.headers.get('stripe-signature');
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!sig || !webhookSecret) {
+    return NextResponse.json({ error: 'Missing stripe signature or webhook secret' }, { status: 400 });
+  }
 
   let event: Stripe.Event;
 
@@ -38,44 +42,38 @@ export async function POST(req: NextRequest) {
         if (userId && planId) {
           const { error } = await supabase
             .from('subscriptions')
-            .upsert({
-              user_id: userId,
-              plan_id: planId,
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId,
-              status: 'active',
-              current_period_start: new Date().toISOString(),
-              current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            }, { onConflict: 'user_id' });
-
-          if (error) {
-            console.error('Supabase upsert error on checkout.session.completed:', error);
-          }
+            .upsert(
+              {
+                user_id: userId,
+                plan_id: planId,
+                stripe_customer_id: customerId,
+                stripe_subscription_id: subscriptionId,
+                status: 'active',
+                current_period_start: new Date().toISOString(),
+                current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              },
+              { onConflict: 'user_id' }
+            );
+          if (error) console.error('DB upsert error (checkout.session.completed):', error);
         }
         break;
       }
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription as string;
-
-        if (subscriptionId) {
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const userId = subscription.metadata?.user_id;
-
+        const subId = invoice.subscription as string | null;
+        if (subId) {
+          const sub = await stripe.subscriptions.retrieve(subId);
+          const userId = sub.metadata?.user_id;
           if (userId) {
-            const { error } = await supabase
+            await supabase
               .from('subscriptions')
               .update({
                 status: 'active',
-                current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-                current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+                current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+                current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
               })
               .eq('user_id', userId);
-
-            if (error) {
-              console.error('Supabase update error on invoice.payment_succeeded:', error);
-            }
           }
         }
         break;
@@ -83,12 +81,10 @@ export async function POST(req: NextRequest) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription as string;
-
-        if (subscriptionId) {
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const userId = subscription.metadata?.user_id;
-
+        const subId = invoice.subscription as string | null;
+        if (subId) {
+          const sub = await stripe.subscriptions.retrieve(subId);
+          const userId = sub.metadata?.user_id;
           if (userId) {
             await supabase
               .from('subscriptions')
@@ -100,9 +96,8 @@ export async function POST(req: NextRequest) {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.user_id;
-
+        const sub = event.data.object as Stripe.Subscription;
+        const userId = sub.metadata?.user_id;
         if (userId) {
           await supabase
             .from('subscriptions')
@@ -113,18 +108,16 @@ export async function POST(req: NextRequest) {
       }
 
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.user_id;
-        const planId = subscription.metadata?.plan_id;
-
+        const sub = event.data.object as Stripe.Subscription;
+        const userId = sub.metadata?.user_id;
         if (userId) {
           await supabase
             .from('subscriptions')
             .update({
-              status: subscription.status,
-              plan_id: planId,
-              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              status: sub.status,
+              plan_id: sub.metadata?.plan_id,
+              current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
             })
             .eq('user_id', userId);
         }
@@ -132,7 +125,7 @@ export async function POST(req: NextRequest) {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`Unhandled Stripe event: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
