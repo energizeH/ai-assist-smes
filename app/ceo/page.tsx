@@ -48,8 +48,17 @@ export default function CEOPage() {
   }, [])
 
   const checkAuthAndFetch = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.email !== CEO_EMAIL) {
+    // Try getUser first, fall back to getSession
+    let email = ''
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      email = user?.email || ''
+    } catch {
+      const { data: { session } } = await supabase.auth.getSession()
+      email = session?.user?.email || ''
+    }
+
+    if (!email || email.toLowerCase() !== CEO_EMAIL) {
       router.push('/dashboard')
       return
     }
@@ -58,13 +67,20 @@ export default function CEOPage() {
     try {
       const res = await fetch('/api/ceo')
       if (!res.ok) {
-        router.push('/dashboard')
-        return
+        if (res.status === 403) {
+          router.push('/dashboard')
+          return
+        }
+        // API error but user is authorized — show empty state
       }
       const json = await res.json()
-      setData(json)
-    } catch {
-      router.push('/dashboard')
+      if (json.error) {
+        console.error('CEO API error:', json.error)
+      } else {
+        setData(json)
+      }
+    } catch (err) {
+      console.error('CEO fetch error:', err)
     } finally {
       setLoading(false)
     }

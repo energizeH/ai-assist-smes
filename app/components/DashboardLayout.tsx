@@ -85,7 +85,7 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
                   {userName}
                 </span>
               )}
-              {userEmail === 'hxssxn772@gmail.com' && (
+              {userEmail.toLowerCase() === 'hxssxn772@gmail.com' && (
                 <Link
                   href="/ceo"
                   className="text-xs bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all"
