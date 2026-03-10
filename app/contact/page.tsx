@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import LegalFooter from '../components/LegalFooter'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', company: '', service: '', message: '' })
@@ -176,18 +177,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
-        <div className="container-custom">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div><h4 className="text-white font-bold mb-4">AI-Assist for SMEs</h4><p>Empowering small businesses with AI automation solutions</p></div>
-            <div><h4 className="text-white font-bold mb-4">Product</h4><Link href="/services" className="block hover:text-white mb-2">Services</Link><Link href="/plans" className="block hover:text-white mb-2">Pricing</Link><Link href="/blog" className="block hover:text-white">Blog</Link></div>
-            <div><h4 className="text-white font-bold mb-4">Company</h4><Link href="/about" className="block hover:text-white mb-2">About</Link><Link href="/contact" className="block hover:text-white">Contact</Link></div>
-            <div><h4 className="text-white font-bold mb-4">Legal</h4><Link href="/privacy" className="block hover:text-white mb-2">Privacy Policy</Link><Link href="/terms" className="block hover:text-white">Terms of Service</Link></div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-center">© 2026 AI-Assist for SMEs. All rights reserved.</div>
-        </div>
-      </footer>
+      <LegalFooter />
     </div>
   )
 }

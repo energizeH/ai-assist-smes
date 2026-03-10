@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useRouter } from 'next/navigation'
 import DashboardLayout from '../../components/DashboardLayout'
 import ToggleSwitch from '../../components/ToggleSwitch'
 
@@ -11,6 +12,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const supabase = createClientComponentClient()
+  const router = useRouter()
 
   // Profile state
   const [profile, setProfile] = useState({ full_name: '', email: '', company: '', phone: '' })
@@ -35,6 +37,12 @@ export default function SettingsPage() {
     zapier_webhook_url: '',
     google_calendar_key: '',
   })
+
+  // Data rights state
+  const [exportingData, setExportingData] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => { fetchSettings() }, [])
 
@@ -191,11 +199,63 @@ export default function SettingsPage() {
     }
   }
 
+  const handleExportData = async () => {
+    setExportingData(true)
+    try {
+      const response = await fetch('/api/user/export-data')
+      if (!response.ok) {
+        const errData = await response.json()
+        throw new Error(errData.error || 'Export failed')
+      }
+      // Trigger download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `ai-assist-data-export-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      showMessage('success', 'Your data export has been downloaded.')
+    } catch (err: any) {
+      showMessage('error', err.message || 'Failed to export data')
+    } finally {
+      setExportingData(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'DELETE MY ACCOUNT') {
+      showMessage('error', 'Please type "DELETE MY ACCOUNT" exactly to confirm.')
+      return
+    }
+    setDeletingAccount(true)
+    try {
+      const response = await fetch('/api/user/delete-account', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: 'DELETE MY ACCOUNT' }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Deletion failed')
+
+      // Sign out and redirect
+      await supabase.auth.signOut()
+      router.push('/')
+    } catch (err: any) {
+      showMessage('error', err.message || 'Failed to delete account')
+    } finally {
+      setDeletingAccount(false)
+    }
+  }
+
   const tabs = [
     { id: 'profile', label: 'Profile', icon: '👤' },
     { id: 'password', label: 'Password', icon: '🔒' },
     { id: 'notifications', label: 'Notifications', icon: '🔔' },
     { id: 'integrations', label: 'Integrations', icon: '🔗' },
+    { id: 'data', label: 'My Data', icon: '🛡️' },
   ]
 
   const inputClass = "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
@@ -367,6 +427,98 @@ export default function SettingsPage() {
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
                   <p className="text-sm text-blue-700 dark:text-blue-400">
                     <strong>Security:</strong> API keys are stored securely and encrypted. They are only used to connect your external services.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Data Rights (GDPR) */}
+            {activeTab === 'data' && (
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Your Data Rights</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                    Under the UK GDPR and Data Protection Act 2018, you have the right to access, export, and delete your personal data.
+                  </p>
+
+                  {/* Data Export */}
+                  <div className="border-b border-gray-200 dark:border-gray-700 pb-6 mb-6">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Export Your Data</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      Download a copy of all your personal data in a machine-readable format (JSON). This includes your profile, settings, appointments, and leads data. This is your right under Article 20 (Right to Data Portability).
+                    </p>
+                    <button
+                      onClick={handleExportData}
+                      disabled={exportingData}
+                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      {exportingData ? 'Preparing Download...' : 'Download My Data'}
+                    </button>
+                  </div>
+
+                  {/* Account Deletion */}
+                  <div>
+                    <h3 className="text-base font-semibold text-red-600 dark:text-red-400 mb-2">Delete Your Account</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      Permanently delete your account and all associated data. This action cannot be undone. Under Article 17 (Right to Erasure), this will:
+                    </p>
+                    <ul className="text-sm text-gray-500 dark:text-gray-400 list-disc pl-5 mb-4 space-y-1">
+                      <li>Cancel any active subscription</li>
+                      <li>Delete your profile, settings, and preferences</li>
+                      <li>Delete all your appointments and leads data</li>
+                      <li>Remove your authentication credentials</li>
+                    </ul>
+
+                    {!showDeleteConfirm ? (
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="inline-flex items-center gap-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete My Account
+                      </button>
+                    ) : (
+                      <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                        <p className="text-sm font-medium text-red-800 dark:text-red-300 mb-3">
+                          This is permanent and cannot be undone. Type <strong>&quot;DELETE MY ACCOUNT&quot;</strong> to confirm:
+                        </p>
+                        <input
+                          type="text"
+                          value={deleteConfirmation}
+                          onChange={(e) => setDeleteConfirmation(e.target.value)}
+                          placeholder="Type DELETE MY ACCOUNT"
+                          className="w-full px-3 py-2 border border-red-300 dark:border-red-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 outline-none text-sm mb-3"
+                        />
+                        <div className="flex gap-3">
+                          <button
+                            onClick={handleDeleteAccount}
+                            disabled={deletingAccount || deleteConfirmation !== 'DELETE MY ACCOUNT'}
+                            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {deletingAccount ? 'Deleting...' : 'Permanently Delete'}
+                          </button>
+                          <button
+                            onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmation('') }}
+                            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
+                  <p className="text-sm text-blue-700 dark:text-blue-400">
+                    <strong>Your rights:</strong> You can also exercise your data rights by emailing{' '}
+                    <a href="mailto:privacy@ai-assist-smes.co.uk" className="underline">privacy@ai-assist-smes.co.uk</a>.
+                    We will respond within one month as required by UK GDPR.
                   </p>
                 </div>
               </div>

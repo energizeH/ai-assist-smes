@@ -88,9 +88,16 @@ export default function VerifiedPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">
-          © 2026 AI-Assist for SMEs. All rights reserved.
-        </p>
+        <div className="text-center mt-6 space-y-2">
+          <div className="flex justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+            <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300 transition">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300 transition">Terms of Service</Link>
+            <Link href="/cookies" className="hover:text-gray-700 dark:hover:text-gray-300 transition">Cookie Policy</Link>
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 text-xs">
+            &copy; {new Date().getFullYear()} AI-Assist for SMEs. All rights reserved.
+          </p>
+        </div>
       </div>
     </div>
   )

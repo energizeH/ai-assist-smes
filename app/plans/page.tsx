@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import LegalFooter from '../components/LegalFooter'
 
 const plans = [
   {
@@ -237,17 +238,7 @@ export default function PlansPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16 py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-          <p>&copy; 2026 AI-Assist for SMEs. All rights reserved.</p>
-          <div className="flex justify-center gap-6 mt-4">
-            <Link href="/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</Link>
-            <Link href="/contact" className="hover:text-blue-600 transition-colors">Contact</Link>
-          </div>
-        </div>
-      </footer>
+      <LegalFooter />
     </div>
   )
 }

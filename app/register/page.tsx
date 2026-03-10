@@ -7,6 +7,7 @@ import Link from 'next/link'
 export default function RegisterPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({ name: '', email: '', company: '', password: '' })
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -17,6 +18,13 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!acceptedTerms) {
+      setStatus('error')
+      setError('You must accept the Terms of Service and Privacy Policy to create an account.')
+      return
+    }
+
     setStatus('loading')
     setError('')
     setSuccessMessage('')
@@ -25,7 +33,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, accepted_terms: true }),
       })
 
       const data = await response.json()
@@ -34,6 +42,7 @@ export default function RegisterPage() {
         setStatus('success')
         setSuccessMessage(data.message || 'Account created. Please check your email to verify your account.')
         setFormData({ name: '', email: '', company: '', password: '' })
+        setAcceptedTerms(false)
         setTimeout(() => router.push('/login'), 3000)
       } else {
         setStatus('error')
@@ -97,6 +106,29 @@ export default function RegisterPage() {
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 placeholder="Min 6 characters" />
             </div>
+
+            {/* Terms & Privacy Acceptance */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                disabled={status === 'loading'}
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+              />
+              <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" target="_blank" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+
             <button type="submit" disabled={status === 'loading'}
               className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
               {status === 'loading' ? 'Creating Account...' : 'Create Account'}
@@ -109,7 +141,7 @@ export default function RegisterPage() {
           </p>
         </div>
         <div className="mt-8 text-center">
-          <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">← Back to home</Link>
+          <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">&larr; Back to home</Link>
         </div>
       </div>
     </div>
