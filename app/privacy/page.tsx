@@ -1,4 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'How AI-Assist for SMEs collects, uses, and protects your personal data under UK GDPR and the Data Protection Act 2018.',
+}
+
 
 export default function PrivacyPage() {
   return (

@@ -10,12 +10,38 @@ export default function SupportPage() {
     subject: '',
     message: ''
   })
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Placeholder for form submission
-    console.log('Support request submitted:', formData)
-    alert('Thank you for contacting us! We\'ll get back to you soon.')
+    setStatus('loading')
+    setErrorMsg('')
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: `[Support Request] ${formData.subject}\n\n${formData.message}`,
+          service: 'Support Request',
+        }),
+      })
+
+      if (response.ok) {
+        setStatus('success')
+        setFormData({ name: '', email: '', subject: '', message: '' })
+      } else {
+        const data = await response.json()
+        setErrorMsg(data.error || 'Failed to send message. Please try again.')
+        setStatus('error')
+      }
+    } catch {
+      setErrorMsg('Something went wrong. Please try again or email us directly.')
+      setStatus('error')
+    }
   }
 
   return (
@@ -41,6 +67,16 @@ export default function SupportPage() {
             {/* Contact Form */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-100 dark:border-gray-700">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Get in Touch</h2>
+              {status === 'success' && (
+                <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-green-800 dark:text-green-400 text-sm font-medium">Your support request has been sent. We'll get back to you as soon as possible.</p>
+                </div>
+              )}
+              {status === 'error' && errorMsg && (
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-red-800 dark:text-red-400 text-sm">{errorMsg}</p>
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -92,9 +128,10 @@ export default function SupportPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:-translate-y-0.5 hover:shadow-xl"
+                  disabled={status === 'loading'}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:-translate-y-0.5 hover:shadow-xl disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                  Send Message
+                  {status === 'loading' ? 'Sending...' : 'Send Message'}
                 </button>
               </form>
             </div>
@@ -108,8 +145,8 @@ export default function SupportPage() {
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Email Support</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-2">Get help from our support team</p>
-                    <a href="mailto:support@ai-assist-smes.com" className="text-blue-600 dark:text-blue-400 hover:underline">
-                      support@ai-assist-smes.com
+                    <a href="mailto:support@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">
+                      support@ai-assist-smes.co.uk
                     </a>
                   </div>
                 </div>

@@ -1,5 +1,12 @@
 import Link from 'next/link'
 import LegalFooter from './components/LegalFooter'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Transform Your Business with AI Automation',
+  description: 'AI-Assist for SMEs helps UK small businesses save time, reduce costs, and boost efficiency with AI-powered workflow automation, chatbots, and CRM. Plans from £49/month.',
+}
+
 
 export default function HomePage() {
   return (

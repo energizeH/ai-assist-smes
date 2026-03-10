@@ -1,4 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description: 'Terms and conditions governing your use of the AI-Assist for SMEs platform, including subscriptions, payments, and liability.',
+}
+
 
 export default function TermsPage() {
   return (

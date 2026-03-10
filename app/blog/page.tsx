@@ -1,5 +1,12 @@
 import Link from 'next/link'
 import LegalFooter from '../components/LegalFooter'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Blog',
+  description: 'Insights, guides, and tips on AI automation for UK small businesses. Learn how to streamline operations and grow your SME with intelligent tools.',
+}
+
 
 const posts = [
   {

@@ -1,4 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Cookie Policy',
+  description: 'Details about the cookies used on AI-Assist for SMEs, how to manage your preferences, and your rights under UK regulations.',
+}
+
 
 export default function CookiePolicyPage() {
   return (

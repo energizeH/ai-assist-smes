@@ -1,0 +1,14 @@
+# AI-Assist for SMEs
+# https://ai-assist-smes.vercel.app
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ai-assist-smes.vercel.app/sitemap.xml
+
+# Disallow private/admin areas
+Disallow: /dashboard
+Disallow: /ceo
+Disallow: /api
+Disallow: /auth

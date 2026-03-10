@@ -1,5 +1,12 @@
 import Link from 'next/link'
 import LegalFooter from '../components/LegalFooter'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'About Us',
+  description: 'AI-Assist for SMEs is a Birmingham-based AI automation consultancy helping UK small businesses transform their operations with intelligent automation solutions.',
+}
+
 
 export default function AboutPage() {
   const team = [
