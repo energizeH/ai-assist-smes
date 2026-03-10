@@ -47,7 +47,7 @@ function getRuleBasedResponse(msg: string): string | null {
     return "Hello! Welcome to AI-Assist for SMEs. I'm your AI Receptionist. I can help with information about our services, pricing, or booking a consultation. How can I help you today?"
   }
   if (lower.includes('contact') || lower.includes('email') || lower.includes('phone') || lower.includes('reach')) {
-    return 'You can reach us at hello@ai-assist-smes.com or through our Contact page. We typically respond within 2 hours during business hours (Mon-Fri, 9am-6pm GMT).'
+    return 'You can reach us at hello@ai-assist-smes.com or through our Contact page. We typically respond within 2 hours during business hours (Mon-Fri, 9am-6pm GMT). You can also request a callback through the contact form.'
   }
   if (lower.includes('thank') || lower.includes('thanks') || lower.includes('great') || lower.includes('perfect')) {
     return "You're welcome! Is there anything else I can help you with?"

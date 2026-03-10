@@ -91,8 +91,8 @@ export default function ContactPage() {
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center text-xl flex-shrink-0">📞</div>
                     <div>
-                      <div className="font-semibold text-gray-900 dark:text-white">Phone</div>
-                      <div className="text-gray-600 dark:text-gray-300">+44 121 000 0000</div>
+                      <div className="font-semibold text-gray-900 dark:text-white">Book a Call</div>
+                      <div className="text-gray-600 dark:text-gray-300">Use the form to request a callback</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
