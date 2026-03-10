@@ -134,7 +134,7 @@ export default function SupportPage() {
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Documentation</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-2">Browse our knowledge base</p>
-                    <Link href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
+                    <Link href="/dashboard/knowledge-base" className="text-blue-600 dark:text-blue-400 hover:underline">
                       View Guides →
                     </Link>
                   </div>
@@ -148,7 +148,7 @@ export default function SupportPage() {
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">FAQs</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-2">Find answers to common questions</p>
-                    <Link href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
+                    <Link href="/plans" className="text-blue-600 dark:text-blue-400 hover:underline">
                       Browse FAQs →
                     </Link>
                   </div>

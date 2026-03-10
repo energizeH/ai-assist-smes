@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
 // Routes that require authentication
-const protectedRoutes = ['/dashboard', '/account']
+const protectedRoutes = ['/dashboard']
 
 // Routes that redirect to dashboard if already authenticated
 const authRoutes = ['/login', '/register']

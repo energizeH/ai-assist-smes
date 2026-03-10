@@ -44,8 +44,7 @@ export default function ContactPage() {
               <Link href="/" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Home</Link>
               <Link href="/about" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">About</Link>
               <Link href="/services" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Services</Link>
-              <Link href="/pricing" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Pricing</Link>
-              <Link href="/blog" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Blog</Link>
+              <Link href="/plans" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Pricing</Link>
               <Link href="/contact" className="text-primary-600 font-semibold">Contact</Link>
             </div>
             <div className="flex space-x-4">
@@ -182,7 +181,7 @@ export default function ContactPage() {
         <div className="container-custom">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div><h4 className="text-white font-bold mb-4">AI-Assist for SMEs</h4><p>Empowering small businesses with AI automation solutions</p></div>
-            <div><h4 className="text-white font-bold mb-4">Product</h4><Link href="/services" className="block hover:text-white mb-2">Services</Link><Link href="/pricing" className="block hover:text-white mb-2">Pricing</Link><Link href="/blog" className="block hover:text-white">Blog</Link></div>
+            <div><h4 className="text-white font-bold mb-4">Product</h4><Link href="/services" className="block hover:text-white mb-2">Services</Link><Link href="/plans" className="block hover:text-white mb-2">Pricing</Link><Link href="/blog" className="block hover:text-white">Blog</Link></div>
             <div><h4 className="text-white font-bold mb-4">Company</h4><Link href="/about" className="block hover:text-white mb-2">About</Link><Link href="/contact" className="block hover:text-white">Contact</Link></div>
             <div><h4 className="text-white font-bold mb-4">Legal</h4><Link href="/privacy" className="block hover:text-white mb-2">Privacy Policy</Link><Link href="/terms" className="block hover:text-white">Terms of Service</Link></div>
           </div>

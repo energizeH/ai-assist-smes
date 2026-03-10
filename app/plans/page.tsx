@@ -104,6 +104,13 @@ export default function PlansPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link href="/" className="text-xl font-bold text-blue-600">AI-Assist for SMEs</Link>
+            <div className="hidden md:flex items-center space-x-6">
+              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors text-sm font-medium">Home</Link>
+              <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors text-sm font-medium">About</Link>
+              <Link href="/services" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors text-sm font-medium">Services</Link>
+              <span className="text-blue-600 text-sm font-semibold">Pricing</span>
+              <Link href="/contact" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors text-sm font-medium">Contact</Link>
+            </div>
             <div className="flex items-center space-x-4">
               <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors text-sm font-medium">Sign In</Link>
               <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">Get Started</Link>

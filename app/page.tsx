@@ -36,7 +36,7 @@ export default function HomePage() {
               Helping SMEs save time, reduce costs, and boost efficiency through intelligent automation solutions
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link href="/register" className="px-8 py-4 bg-blue-600 text-white text-lg rounded-lg hover:bg-blue-700 font-medium transition text-center">
+              <Link href="/contact" className="px-8 py-4 bg-blue-600 text-white text-lg rounded-lg hover:bg-blue-700 font-medium transition text-center">
                 Start Free Consultation
               </Link>
               <Link href="/services" className="px-8 py-4 border-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 text-lg rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium transition text-center">

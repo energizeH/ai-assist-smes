@@ -86,8 +86,7 @@ export default function BlogPage() {
               <Link href="/" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Home</Link>
               <Link href="/about" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">About</Link>
               <Link href="/services" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Services</Link>
-              <Link href="/pricing" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Pricing</Link>
-              <Link href="/blog" className="text-primary-600 font-semibold">Blog</Link>
+              <Link href="/plans" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Pricing</Link>
               <Link href="/contact" className="text-gray-700 dark:text-gray-300 hover:text-primary-600 transition">Contact</Link>
             </div>
             <div className="flex space-x-4">
@@ -114,10 +113,10 @@ export default function BlogPage() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">Featured Articles</h2>
           <div className="grid md:grid-cols-2 gap-8 mb-16">
             {featured.map((post) => (
-              <div key={post.id} className="card hover:shadow-xl transition-all duration-300 cursor-pointer group">
+              <div key={post.id} className="card hover:shadow-xl transition-all duration-300">
                 <div className="text-6xl mb-4">{post.emoji}</div>
                 <span className="inline-block bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 text-xs font-semibold px-3 py-1 rounded-full mb-3">{post.category}</span>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-primary-600 transition">{post.title}</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 ">{post.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">{post.excerpt}</p>
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <span>{post.author}</span>
@@ -140,10 +139,10 @@ export default function BlogPage() {
           {/* All Posts */}
           <div className="grid md:grid-cols-3 gap-8">
             {rest.map((post) => (
-              <div key={post.id} className="card hover:shadow-xl transition-all duration-300 cursor-pointer group">
+              <div key={post.id} className="card hover:shadow-xl transition-all duration-300">
                 <div className="text-5xl mb-4">{post.emoji}</div>
                 <span className="inline-block bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-semibold px-3 py-1 rounded-full mb-3">{post.category}</span>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 group-hover:text-primary-600 transition">{post.title}</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 ">{post.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">{post.excerpt}</p>
                 <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <span>{post.author}</span>
@@ -172,7 +171,7 @@ export default function BlogPage() {
         <div className="container-custom">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div><h4 className="text-white font-bold mb-4">AI-Assist for SMEs</h4><p>Empowering small businesses with AI automation solutions</p></div>
-            <div><h4 className="text-white font-bold mb-4">Product</h4><Link href="/services" className="block hover:text-white mb-2">Services</Link><Link href="/pricing" className="block hover:text-white mb-2">Pricing</Link><Link href="/blog" className="block hover:text-white">Blog</Link></div>
+            <div><h4 className="text-white font-bold mb-4">Product</h4><Link href="/services" className="block hover:text-white mb-2">Services</Link><Link href="/plans" className="block hover:text-white mb-2">Pricing</Link><Link href="/blog" className="block hover:text-white">Blog</Link></div>
             <div><h4 className="text-white font-bold mb-4">Company</h4><Link href="/about" className="block hover:text-white mb-2">About</Link><Link href="/contact" className="block hover:text-white">Contact</Link></div>
             <div><h4 className="text-white font-bold mb-4">Legal</h4><Link href="/privacy" className="block hover:text-white mb-2">Privacy Policy</Link><Link href="/terms" className="block hover:text-white">Terms of Service</Link></div>
           </div>
