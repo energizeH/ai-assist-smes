@@ -28,6 +28,7 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
   const [loggingOut, setLoggingOut] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userName, setUserName] = useState('')
+  const [userEmail, setUserEmail] = useState('')
 
   useEffect(() => {
     // Fetch user info
@@ -37,6 +38,7 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
         if (res.ok) {
           const data = await res.json()
           setUserName(data.user?.name || data.user?.email || '')
+          setUserEmail(data.user?.email || '')
         }
       } catch {}
     }
@@ -82,6 +84,14 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
                 <span className="hidden sm:block text-sm text-gray-600 dark:text-gray-400">
                   {userName}
                 </span>
+              )}
+              {userEmail === 'hxssxn772@gmail.com' && (
+                <Link
+                  href="/ceo"
+                  className="text-xs bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all"
+                >
+                  CEO
+                </Link>
               )}
               <Link 
                 href="/support" 
