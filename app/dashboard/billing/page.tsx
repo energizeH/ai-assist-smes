@@ -79,9 +79,41 @@ export default function BillingPage() {
 
   const plan = subscription ? planDetails[subscription.plan] || null : null
 
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'active':
+        return { label: 'Active', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500', dot: true }
+      case 'past_due':
+        return { label: 'Payment Overdue', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500', dot: true }
+      case 'cancelled':
+        return { label: 'Cancelled', color: 'text-gray-500 dark:text-gray-400', bg: 'bg-gray-400', dot: false }
+      case 'trialing':
+        return { label: 'Trial', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500', dot: true }
+      default:
+        return { label: status, color: 'text-gray-500', bg: 'bg-gray-400', dot: false }
+    }
+  }
+
   return (
     <DashboardLayout title="Billing & Subscription" subtitle="Manage your plan and payment methods">
       {error && <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">{error}</div>}
+
+      {/* Past due warning banner */}
+      {subscription?.status === 'past_due' && (
+        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-red-500 text-xl">⚠</span>
+            <div>
+              <p className="text-sm font-medium text-red-700 dark:text-red-400">Your payment is overdue</p>
+              <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">Please update your payment method to avoid losing access to your features.</p>
+            </div>
+          </div>
+          <button onClick={handleManageBilling} disabled={portalLoading}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors whitespace-nowrap flex-shrink-0 disabled:opacity-50">
+            {portalLoading ? 'Opening...' : 'Update Payment'}
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading billing information...</div>
@@ -96,15 +128,15 @@ export default function BillingPage() {
                   <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold rounded-full uppercase">
                     Current Plan
                   </span>
-                  {subscription?.status === 'active' && (
-                    <span className="flex items-center text-green-600 dark:text-green-400 text-sm font-medium">
-                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2" />
-                      Active
-                    </span>
-                  )}
-                  {subscription?.status === 'past_due' && (
-                    <span className="text-red-600 text-sm font-medium">Payment Overdue</span>
-                  )}
+                  {subscription && (() => {
+                    const status = getStatusDisplay(subscription.status)
+                    return (
+                      <span className={`flex items-center ${status.color} text-sm font-medium`}>
+                        {status.dot && <span className={`w-2 h-2 ${status.bg} rounded-full mr-2`} />}
+                        {status.label}
+                      </span>
+                    )
+                  })()}
                 </div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
                   {plan?.name || 'No Active Plan'}
@@ -112,7 +144,10 @@ export default function BillingPage() {
                 {plan && <p className="text-xl text-blue-600 dark:text-blue-400 font-semibold">{plan.price}</p>}
                 {subscription && (
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                    Next billing date: {new Date(subscription.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {subscription.status === 'cancelled'
+                      ? `Access until: ${new Date(subscription.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                      : `Next billing date: ${new Date(subscription.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                    }
                   </p>
                 )}
               </div>
@@ -134,7 +169,7 @@ export default function BillingPage() {
 
               {/* Actions */}
               <div className="p-6 bg-gray-50 dark:bg-gray-900/50 flex flex-col sm:flex-row gap-3">
-                {subscription ? (
+                {subscription && subscription.status !== 'cancelled' ? (
                   <button onClick={handleManageBilling} disabled={portalLoading}
                     className="px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50">
                     {portalLoading ? 'Opening...' : 'Manage Billing'}
@@ -142,7 +177,7 @@ export default function BillingPage() {
                 ) : (
                   <Link href="/plans"
                     className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors text-center">
-                    Choose a Plan
+                    {subscription?.status === 'cancelled' ? 'Resubscribe' : 'Choose a Plan'}
                   </Link>
                 )}
                 <Link href="/plans"

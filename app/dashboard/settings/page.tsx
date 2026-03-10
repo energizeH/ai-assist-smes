@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import DashboardLayout from '../../components/DashboardLayout'
+import ToggleSwitch from '../../components/ToggleSwitch'
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile')
@@ -134,8 +135,8 @@ export default function SettingsPage() {
       showMessage('error', 'Passwords do not match')
       return
     }
-    if (passwords.new_password.length < 6) {
-      showMessage('error', 'Password must be at least 6 characters')
+    if (passwords.new_password.length < 8) {
+      showMessage('error', 'Password must be at least 8 characters')
       return
     }
     setSaving(true)
@@ -271,13 +272,13 @@ export default function SettingsPage() {
                 <form onSubmit={handleChangePassword} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
-                    <input type="password" required minLength={6} value={passwords.new_password}
+                    <input type="password" required minLength={8} value={passwords.new_password}
                       onChange={e => setPasswords({...passwords, new_password: e.target.value})} className={inputClass}
-                      placeholder="Min 6 characters" />
+                      placeholder="Min 8 characters" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
-                    <input type="password" required minLength={6} value={passwords.confirm_password}
+                    <input type="password" required minLength={8} value={passwords.confirm_password}
                       onChange={e => setPasswords({...passwords, confirm_password: e.target.value})} className={inputClass}
                       placeholder="Repeat your new password" />
                   </div>
@@ -294,28 +295,30 @@ export default function SettingsPage() {
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Notification Preferences</h2>
                 <div className="space-y-5">
-                  {[
-                    { key: 'notifications_email', label: 'Email Notifications', desc: 'Receive email updates about your account' },
-                    { key: 'notifications_sms', label: 'SMS Notifications', desc: 'Get text message alerts' },
-                    { key: 'notifications_push', label: 'Push Notifications', desc: 'Browser push notification alerts' },
-                    { key: 'notifications_marketing', label: 'Marketing Updates', desc: 'Receive product news and special offers' },
-                  ].map(item => (
-                    <div key={item.key} className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{item.label}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{item.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => setNotifications({ ...notifications, [item.key]: !notifications[item.key as keyof typeof notifications] })}
-                        className={`relative w-11 h-6 rounded-full transition-colors ${
-                          notifications[item.key as keyof typeof notifications] ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                        }`}>
-                        <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                          notifications[item.key as keyof typeof notifications] ? 'translate-x-5' : 'translate-x-0.5'
-                        }`} />
-                      </button>
-                    </div>
-                  ))}
+                  <ToggleSwitch
+                    enabled={notifications.notifications_email}
+                    onChange={(val) => setNotifications({ ...notifications, notifications_email: val })}
+                    label="Email Notifications"
+                    description="Receive email updates about your account"
+                  />
+                  <ToggleSwitch
+                    enabled={notifications.notifications_sms}
+                    onChange={(val) => setNotifications({ ...notifications, notifications_sms: val })}
+                    label="SMS Notifications"
+                    description="Get text message alerts"
+                  />
+                  <ToggleSwitch
+                    enabled={notifications.notifications_push}
+                    onChange={(val) => setNotifications({ ...notifications, notifications_push: val })}
+                    label="Push Notifications"
+                    description="Browser push notification alerts"
+                  />
+                  <ToggleSwitch
+                    enabled={notifications.notifications_marketing}
+                    onChange={(val) => setNotifications({ ...notifications, notifications_marketing: val })}
+                    label="Marketing Updates"
+                    description="Receive product news and special offers"
+                  />
                 </div>
                 <button onClick={handleSaveNotifications} disabled={saving}
                   className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">

@@ -1,8 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import DashboardLayout from '../components/DashboardLayout'
+import OnboardingWizard from '../components/OnboardingWizard'
+import UpgradeBanner from '../components/UpgradeBanner'
 
 interface Stats {
   totalClients: number
@@ -19,13 +23,60 @@ interface Activity {
   created_at: string
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [stats, setStats] = useState<Stats>({ totalClients: 0, activeLeads: 0, appointmentsToday: 0, automationsActive: 0 })
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [userName, setUserName] = useState('')
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false)
+  const searchParams = useSearchParams()
+  const supabase = createClientComponentClient()
+
+  // Check for subscription success redirect
+  useEffect(() => {
+    if (searchParams.get('subscription') === 'success') {
+      setShowSuccessBanner(true)
+      setTimeout(() => setShowSuccessBanner(false), 8000)
+      // Clean URL
+      window.history.replaceState({}, '', '/dashboard')
+    }
+  }, [searchParams])
 
   const fetchData = useCallback(async () => {
     try {
+      // Fetch user info and check onboarding
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || '')
+
+        // Check if user needs onboarding
+        const isOnboarded = user.user_metadata?.onboarding_complete
+        if (!isOnboarded) {
+          // Check if they have any data (existing user vs brand new)
+          const { count } = await supabase
+            .from('clients')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+          if ((count || 0) === 0) {
+            setShowOnboarding(true)
+          }
+        }
+
+        // Fetch subscription
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('plan, status')
+          .eq('user_id', user.id)
+          .single()
+        if (sub) {
+          setSubscriptionPlan(sub.plan)
+          setSubscriptionStatus(sub.status)
+        }
+      }
+
       const [statsRes, activitiesRes] = await Promise.all([
         fetch('/api/dashboard/stats'),
         fetch('/api/dashboard/activities'),
@@ -43,7 +94,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     fetchData()
@@ -70,8 +121,52 @@ export default function DashboardPage() {
     { label: 'Active Automations', value: stats.automationsActive, href: '/dashboard/automations', color: 'orange', icon: '⚡' },
   ]
 
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false)
+  }
+
+  // Show onboarding wizard
+  if (showOnboarding) {
+    return <OnboardingWizard onComplete={handleOnboardingComplete} userName={userName} />
+  }
+
   return (
     <DashboardLayout>
+      {/* Subscription success banner */}
+
+      {showSuccessBanner && (
+        <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex items-center gap-3">
+          <span className="text-green-600 text-xl">✓</span>
+          <div>
+            <p className="text-sm font-medium text-green-700 dark:text-green-400">Subscription activated successfully!</p>
+            <p className="text-xs text-green-600 dark:text-green-500 mt-0.5">Your plan is now active. Enjoy your new features.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Past due warning */}
+      {subscriptionStatus === 'past_due' && (
+        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-red-500 text-xl">⚠</span>
+            <div>
+              <p className="text-sm font-medium text-red-700 dark:text-red-400">Payment overdue</p>
+              <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">Please update your payment method to avoid service interruption.</p>
+            </div>
+          </div>
+          <Link href="/dashboard/billing" className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors whitespace-nowrap flex-shrink-0">
+            Update Payment
+          </Link>
+        </div>
+      )}
+
+      {/* No subscription prompt */}
+      {!subscriptionPlan && !loading && (
+        <div className="mb-6">
+          <UpgradeBanner message="Choose a plan to unlock all AI-Assist features" />
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statCards.map((card) => (
@@ -128,7 +223,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             activities.map((activity) => (
-              <div key={activity.id} className="px-6 py-4 flex items-start gap-4 animate-fadeIn">
+              <div key={activity.id} className="px-6 py-4 flex items-start gap-4">
                 <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-sm">
                     {activity.type === 'lead' ? '🎯' : activity.type === 'appointment' ? '📅' : activity.type === 'client' ? '👥' : '⚡'}
@@ -145,5 +240,17 @@ export default function DashboardPage() {
         </div>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading dashboard...</div>
+      </DashboardLayout>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }

@@ -11,14 +11,19 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('appointments')
-      .select('*')
+      .select('id, user_id, client_name, client_email, client_phone, service, appointment_date, appointment_time, duration, notes, status, created_at')
       .eq('user_id', session.user.id)
       .order('appointment_date', { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      console.error('Appointments fetch error:', error)
+      return NextResponse.json({ error: error.message || 'Failed to load appointments' }, { status: 500 })
+    }
     return NextResponse.json({ appointments: data || [] })
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('Appointments GET error:', error)
+    const message = error instanceof Error ? error.message : 'Failed to load appointments'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -52,18 +57,23 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Appointment insert error:', error)
+      return NextResponse.json({ error: error.message || 'Failed to create appointment' }, { status: 500 })
+    }
 
-    // Log activity
-    await supabase.from('activities').insert([{
+    // Log activity (non-blocking)
+    supabase.from('activities').insert([{
       user_id: session.user.id,
       type: 'appointment',
       title: `New appointment: ${client_name}`,
       description: `Scheduled for ${appointment_date} at ${appointment_time}`,
-    }])
+    }]).then(() => {})
 
     return NextResponse.json({ appointment: data }, { status: 201 })
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('Appointments POST error:', error)
+    const message = error instanceof Error ? error.message : 'Failed to create appointment'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

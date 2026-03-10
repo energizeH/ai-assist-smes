@@ -4,9 +4,14 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-})
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('Payment system is not configured. Please contact support.')
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2023-10-16',
+  })
+}
 
 const PLANS: Record<string, { priceId: string; name: string }> = {
   starter: {
@@ -25,6 +30,7 @@ const PLANS: Record<string, { priceId: string; name: string }> = {
 
 export async function POST(req: NextRequest) {
   try {
+    const stripe = getStripe()
     const body = await req.json()
     
     // Support both direct planId/userId calls and planName from pricing page
@@ -55,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     if (!planId) {
       return NextResponse.json(
-        { error: 'Plan selection is required' },
+        { error: 'Please select a plan to continue' },
         { status: 400 }
       )
     }
@@ -63,14 +69,14 @@ export async function POST(req: NextRequest) {
     const plan = PLANS[planId]
     if (!plan) {
       return NextResponse.json(
-        { error: `Invalid plan: ${planId}. Valid plans: starter, professional, enterprise` },
+        { error: 'The selected plan is not available. Please try a different plan.' },
         { status: 400 }
       )
     }
 
     if (!plan.priceId) {
       return NextResponse.json(
-        { error: `Stripe price ID not configured for plan: ${planId}` },
+        { error: 'This plan is not yet available for purchase. Please contact support.' },
         { status: 500 }
       )
     }
@@ -106,6 +112,8 @@ export async function POST(req: NextRequest) {
       mode: 'subscription',
       success_url: `${appUrl}/dashboard?subscription=success&plan=${planId}`,
       cancel_url: `${appUrl}/plans?cancelled=true`,
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
       metadata: {
         user_id: userId,
         plan_id: planId,
@@ -121,7 +129,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: session.url, sessionId: session.id })
   } catch (error: unknown) {
     console.error('Stripe checkout error:', error)
-    const message = error instanceof Error ? error.message : 'Failed to create checkout session'
-    return NextResponse.json({ error: message }, { status: 500 })
+    
+    // Return user-friendly error messages instead of raw Stripe errors
+    const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.'
+    const lowerMsg = message.toLowerCase()
+    
+    // Don't expose internal error details to the user
+    let safeMessage = 'Something went wrong. Please try again.'
+    if (lowerMsg.includes('no such price') || lowerMsg.includes('resource_missing') || lowerMsg.includes('invalid_request')) {
+      safeMessage = 'This plan is temporarily unavailable. Please try again later or contact support.'
+    } else if (lowerMsg.includes('authentication') || lowerMsg.includes('api key')) {
+      safeMessage = 'Payment system configuration error. Please contact support.'
+    } else if (!lowerMsg.includes('stripe') && !lowerMsg.includes('api')) {
+      safeMessage = message
+    }
+    return NextResponse.json({ error: safeMessage }, { status: 500 })
   }
 }

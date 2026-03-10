@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import ThemeToggle from './components/ThemeToggle'
+import CookieConsent from './components/CookieConsent'
 
 export const metadata: Metadata = {
   title: 'AI-Assist for SMEs | AI Automation Consultancy',
@@ -18,6 +19,7 @@ export default function RootLayout({
       <body>
         {children}
         <ThemeToggle />
+        <CookieConsent />
       </body>
     </html>
   )

@@ -47,6 +47,20 @@ export async function POST(req: NextRequest) {
         const subscriptionId = session.subscription as string;
 
         if (userId && planId) {
+          // Get actual subscription dates from Stripe
+          let periodStart = new Date().toISOString();
+          let periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+          if (subscriptionId) {
+            try {
+              const sub = await stripe.subscriptions.retrieve(subscriptionId);
+              periodStart = new Date(sub.current_period_start * 1000).toISOString();
+              periodEnd = new Date(sub.current_period_end * 1000).toISOString();
+            } catch (e) {
+              console.error('Failed to retrieve subscription details:', e);
+            }
+          }
+
           const { error } = await supabase
             .from('subscriptions')
             .upsert(
@@ -56,12 +70,20 @@ export async function POST(req: NextRequest) {
                 stripe_customer_id: customerId,
                 stripe_subscription_id: subscriptionId,
                 status: 'active',
-                current_period_start: new Date().toISOString(),
-                current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                current_period_start: periodStart,
+                current_period_end: periodEnd,
               },
               { onConflict: 'user_id' }
             );
           if (error) console.error('DB upsert error (checkout.session.completed):', error);
+
+          // Log activity
+          await supabase.from('activities').insert([{
+            user_id: userId,
+            type: 'billing',
+            title: `Subscribed to ${planId} plan`,
+            description: 'Subscription activated successfully',
+          }]);
         }
         break;
       }
@@ -97,6 +119,14 @@ export async function POST(req: NextRequest) {
               .from('subscriptions')
               .update({ status: 'past_due' })
               .eq('user_id', userId);
+
+            // Log activity for visibility
+            await supabase.from('activities').insert([{
+              user_id: userId,
+              type: 'billing',
+              title: 'Payment failed',
+              description: 'Your subscription payment could not be processed. Please update your payment method.',
+            }]);
           }
         }
         break;
@@ -110,6 +140,14 @@ export async function POST(req: NextRequest) {
             .from('subscriptions')
             .update({ status: 'cancelled' })
             .eq('user_id', userId);
+
+          // Log activity
+          await supabase.from('activities').insert([{
+            user_id: userId,
+            type: 'billing',
+            title: 'Subscription cancelled',
+            description: 'Your subscription has been cancelled. You can resubscribe anytime.',
+          }]);
         }
         break;
       }

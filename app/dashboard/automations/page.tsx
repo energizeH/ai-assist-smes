@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import DashboardLayout from '../../components/DashboardLayout'
+import ToggleSwitch from '../../components/ToggleSwitch'
 
 interface Automation {
   id: string
@@ -210,13 +211,12 @@ export default function AutomationsPage() {
                   placeholder="Describe what this automation does..."
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
               </div>
-              <div className="flex items-center gap-3">
-                <button type="button" onClick={() => setForm({...form, is_active: !form.is_active})}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${form.is_active ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.is_active ? 'translate-x-6' : 'translate-x-0.5'}`} />
-                </button>
-                <span className="text-sm text-gray-700 dark:text-gray-300">{form.is_active ? 'Active' : 'Paused'}</span>
-              </div>
+              <ToggleSwitch
+                enabled={form.is_active}
+                onChange={(val) => setForm({...form, is_active: val})}
+                label={form.is_active ? 'Active' : 'Paused'}
+                size="sm"
+              />
               <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
                   {saving ? 'Saving...' : (editingAutomation ? 'Update' : 'Create Automation')}
@@ -242,10 +242,13 @@ export default function AutomationsPage() {
           {automations.map(auto => (
             <div key={auto.id} className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-start gap-4">
-                <button onClick={() => handleToggle(auto.id, auto.is_active)}
-                  className={`relative mt-1 w-10 h-5 rounded-full transition-colors flex-shrink-0 ${auto.is_active ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${auto.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                </button>
+                <div className="mt-1 flex-shrink-0">
+                  <ToggleSwitch
+                    enabled={auto.is_active}
+                    onChange={() => handleToggle(auto.id, auto.is_active)}
+                    size="sm"
+                  />
+                </div>
                 <div>
                   <h3 className="font-medium text-gray-900 dark:text-white">{auto.name}</h3>
                   <div className="flex flex-wrap gap-2 mt-1">

@@ -126,17 +126,31 @@ export default function PlansPage() {
           </div>
         )}
 
-        {/* Billing Toggle */}
+        {/* Billing Toggle — proper readable toggle */}
         <div className="flex items-center justify-center gap-4 mb-12">
-          <span className={`text-sm font-medium ${billingPeriod === 'monthly' ? 'text-blue-600' : 'text-gray-500 dark:text-gray-400'}`}>Monthly</span>
           <button
-            onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'annual' : 'monthly')}
-            className={`relative w-14 h-8 rounded-full transition-colors ${billingPeriod === 'annual' ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+            onClick={() => setBillingPeriod('monthly')}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              billingPeriod === 'monthly'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
           >
-            <span className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${billingPeriod === 'annual' ? 'translate-x-7' : 'translate-x-1'}`} />
+            Monthly
           </button>
-          <span className={`text-sm font-medium ${billingPeriod === 'annual' ? 'text-blue-600' : 'text-gray-500 dark:text-gray-400'}`}>Annual</span>
-          <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">Save 20%</span>
+          <button
+            onClick={() => setBillingPeriod('annual')}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              billingPeriod === 'annual'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            Annual
+          </button>
+          {billingPeriod === 'annual' && (
+            <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">Save 20%</span>
+          )}
         </div>
 
         {/* Pricing Cards */}
@@ -219,7 +233,7 @@ export default function PlansPage() {
       {/* Footer */}
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-          <p>© 2026 AI-Assist for SMEs. All rights reserved.</p>
+          <p>&copy; 2026 AI-Assist for SMEs. All rights reserved.</p>
           <div className="flex justify-center gap-6 mt-4">
             <Link href="/privacy" className="hover:text-blue-600 transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</Link>
