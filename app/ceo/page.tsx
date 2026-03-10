@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -40,7 +39,6 @@ export default function CEOPage() {
   const [loading, setLoading] = useState(true)
   const [authorized, setAuthorized] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'subscriptions' | 'revenue' | 'contacts' | 'activity'>('overview')
-  const supabase = createClientComponentClient()
   const router = useRouter()
 
   useEffect(() => {
@@ -48,14 +46,16 @@ export default function CEOPage() {
   }, [])
 
   const checkAuthAndFetch = async () => {
-    // Try getUser first, fall back to getSession
+    // Use the /api/auth/me endpoint to reliably get the logged-in user email
     let email = ''
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      email = user?.email || ''
+      const meRes = await fetch('/api/auth/me')
+      if (meRes.ok) {
+        const meData = await meRes.json()
+        email = meData.user?.email || ''
+      }
     } catch {
-      const { data: { session } } = await supabase.auth.getSession()
-      email = session?.user?.email || ''
+      // Auth check failed
     }
 
     if (!email || email.toLowerCase() !== CEO_EMAIL) {
