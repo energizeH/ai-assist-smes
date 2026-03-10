@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation'
 const plans = [
   {
     name: 'Starter',
-    price: '£9',
-    annualPrice: '£7',
+    price: '£49',
+    annualPrice: '£39',
     period: '/month',
     description: 'Perfect for small businesses getting started with AI automation',
     features: [
@@ -24,8 +24,8 @@ const plans = [
   },
   {
     name: 'Professional',
-    price: '£29',
-    annualPrice: '£23',
+    price: '£149',
+    annualPrice: '£119',
     period: '/month',
     description: 'Ideal for growing businesses seeking advanced automation',
     features: [
@@ -43,8 +43,8 @@ const plans = [
   },
   {
     name: 'Enterprise',
-    price: '£79',
-    annualPrice: '£63',
+    price: '£299',
+    annualPrice: '£239',
     period: '/month',
     description: 'For established businesses requiring complete automation solutions',
     features: [

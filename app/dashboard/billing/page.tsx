@@ -18,17 +18,17 @@ interface Subscription {
 const planDetails: Record<string, { name: string; price: string; features: string[] }> = {
   starter: {
     name: 'Starter',
-    price: '£9/month',
+    price: '£49/month',
     features: ['1,000 AI messages/month', 'Basic WhatsApp automation', 'Email support', '1 user account'],
   },
   professional: {
     name: 'Professional',
-    price: '£29/month',
+    price: '£149/month',
     features: ['10,000 AI messages/month', 'Advanced automation', 'Priority support', '5 user accounts', 'CRM integration'],
   },
   enterprise: {
     name: 'Enterprise',
-    price: '£79/month',
+    price: '£299/month',
     features: ['Unlimited AI messages', 'Full omnichannel automation', 'Dedicated account manager', 'Unlimited users', 'API access'],
   },
 }

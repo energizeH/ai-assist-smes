@@ -26,7 +26,7 @@ function getRuleBasedResponse(msg: string): string | null {
   const lower = msg.toLowerCase()
 
   if (lower.includes('price') || lower.includes('pricing') || lower.includes('cost') || lower.includes('how much') || lower.includes('plan')) {
-    return 'Our plans start from £9/month for Starter, £29/month for Professional, and £79/month for Enterprise. All plans include a free consultation. Would you like to discuss which plan suits your business best?'
+    return 'Our plans start from £49/month for Starter, £149/month for Professional, and £299/month for Enterprise. All plans include a free consultation. Would you like to discuss which plan suits your business best?'
   }
   if (lower.includes('service') || lower.includes('what do you') || lower.includes('offer') || lower.includes('provide')) {
     return 'We offer: AI Receptionist Systems, WhatsApp Automation, Lead Management, Email Automation, Appointment Scheduling, and Custom API Integrations. Each solution is tailored to your SME. Which service interests you most?'
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
 
 Business Info:
 - Services: AI Receptionist Systems, WhatsApp Automation, Lead Management, Email Automation, Appointment Scheduling, Custom API Integrations
-- Plans: Starter £9/month, Professional £29/month, Enterprise £79/month
+- Plans: Starter £49/month, Professional £149/month, Enterprise £299/month
 - Opening Hours: Mon-Fri, 9am - 6pm GMT
 - Contact: hello@ai-assist-smes.com
 

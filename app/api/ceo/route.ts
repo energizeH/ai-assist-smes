@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Monthly recurring revenue estimate
-    const mrr = (planBreakdown.starter * 9) + (planBreakdown.professional * 29) + (planBreakdown.enterprise * 79)
+    const mrr = (planBreakdown.starter * 49) + (planBreakdown.professional * 149) + (planBreakdown.enterprise * 299)
 
     // Stripe revenue data (if available)
     let stripeBalance = null

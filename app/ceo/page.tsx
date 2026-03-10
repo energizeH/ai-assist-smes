@@ -39,14 +39,25 @@ export default function CEOPage() {
   const [loading, setLoading] = useState(true)
   const [authorized, setAuthorized] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'subscriptions' | 'revenue' | 'contacts' | 'activity'>('overview')
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [selectedUser, setSelectedUser] = useState<any | null>(null)
+  const [modalAction, setModalAction] = useState<string | null>(null)
+  const [grantPlan, setGrantPlan] = useState('professional')
   const router = useRouter()
 
   useEffect(() => {
     checkAuthAndFetch()
   }, [])
 
+  useEffect(() => {
+    if (actionMessage) {
+      const timer = setTimeout(() => setActionMessage(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [actionMessage])
+
   const checkAuthAndFetch = async () => {
-    // Use the /api/auth/me endpoint to reliably get the logged-in user email
     let email = ''
     try {
       const meRes = await fetch('/api/auth/me')
@@ -71,12 +82,9 @@ export default function CEOPage() {
           router.push('/dashboard')
           return
         }
-        // API error but user is authorized — show empty state
       }
       const json = await res.json()
-      if (json.error) {
-        console.error('CEO API error:', json.error)
-      } else {
+      if (!json.error) {
         setData(json)
       }
     } catch (err) {
@@ -84,6 +92,37 @@ export default function CEOPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const executeAction = async (action: string, userId: string, plan?: string) => {
+    setActionLoading(`${action}-${userId}`)
+    setActionMessage(null)
+    try {
+      const res = await fetch('/api/ceo/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, userId, plan }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Action failed')
+      setActionMessage({ type: 'success', text: json.message })
+      // Refresh data
+      const dataRes = await fetch('/api/ceo')
+      if (dataRes.ok) {
+        const newData = await dataRes.json()
+        if (!newData.error) setData(newData)
+      }
+    } catch (err: any) {
+      setActionMessage({ type: 'error', text: err.message })
+    } finally {
+      setActionLoading(null)
+      setSelectedUser(null)
+      setModalAction(null)
+    }
+  }
+
+  const getUserSubscription = (userId: string) => {
+    return data?.subscriptions.all.find(s => s.user_id === userId)
   }
 
   if (!authorized || loading) {
@@ -141,6 +180,90 @@ export default function CEOPage() {
         </div>
       </div>
 
+      {/* Toast notification */}
+      {actionMessage && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg text-sm font-medium shadow-xl animate-pulse ${
+          actionMessage.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+        }`}>
+          {actionMessage.text}
+        </div>
+      )}
+
+      {/* User Action Modal */}
+      {selectedUser && modalAction && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold text-white mb-2">
+              {modalAction === 'grant_free_access' && 'Grant Free Access'}
+              {modalAction === 'change_plan' && 'Change Plan'}
+              {modalAction === 'revoke_access' && 'Revoke Access'}
+              {modalAction === 'delete_user' && 'Delete User'}
+              {modalAction === 'reactivate' && 'Reactivate Subscription'}
+            </h3>
+            <p className="text-sm text-gray-400 mb-4">
+              User: <span className="text-white font-medium">{selectedUser.full_name || selectedUser.email}</span>
+              <br />
+              <span className="text-gray-500">{selectedUser.email}</span>
+            </p>
+
+            {(modalAction === 'grant_free_access' || modalAction === 'change_plan') && (
+              <div className="mb-4">
+                <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Select Plan</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['starter', 'professional', 'enterprise'].map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setGrantPlan(p)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
+                        grantPlan === p
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {modalAction === 'revoke_access' && (
+              <p className="text-sm text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mb-4">
+                This will cancel their subscription. They will lose access to paid features.
+              </p>
+            )}
+
+            {modalAction === 'delete_user' && (
+              <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
+                This will permanently delete this user and all their data. This cannot be undone.
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setSelectedUser(null); setModalAction(null) }}
+                className="flex-1 px-4 py-2.5 bg-gray-800 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => executeAction(modalAction, selectedUser.id, grantPlan)}
+                disabled={!!actionLoading}
+                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                  modalAction === 'delete_user'
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : modalAction === 'revoke_access'
+                    ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {actionLoading ? 'Processing...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Tabs */}
         <div className="flex gap-1 mb-8 bg-gray-900 rounded-xl p-1 overflow-x-auto">
@@ -189,9 +312,9 @@ export default function CEOPage() {
                 <h3 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wide">Plan Breakdown</h3>
                 <div className="space-y-4">
                   {[
-                    { plan: 'Starter (£9/mo)', count: data.subscriptions.planBreakdown.starter, color: 'bg-blue-500', revenue: data.subscriptions.planBreakdown.starter * 9 },
-                    { plan: 'Professional (£29/mo)', count: data.subscriptions.planBreakdown.professional, color: 'bg-purple-500', revenue: data.subscriptions.planBreakdown.professional * 29 },
-                    { plan: 'Enterprise (£79/mo)', count: data.subscriptions.planBreakdown.enterprise, color: 'bg-orange-500', revenue: data.subscriptions.planBreakdown.enterprise * 79 },
+                    { plan: 'Starter (£49/mo)', count: data.subscriptions.planBreakdown.starter, color: 'bg-blue-500', revenue: data.subscriptions.planBreakdown.starter * 49 },
+                    { plan: 'Professional (£149/mo)', count: data.subscriptions.planBreakdown.professional, color: 'bg-purple-500', revenue: data.subscriptions.planBreakdown.professional * 149 },
+                    { plan: 'Enterprise (£299/mo)', count: data.subscriptions.planBreakdown.enterprise, color: 'bg-orange-500', revenue: data.subscriptions.planBreakdown.enterprise * 299 },
                   ].map(p => (
                     <div key={p.plan} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -324,42 +447,113 @@ export default function CEOPage() {
           </div>
         )}
 
-        {/* Users Tab */}
+        {/* Users Tab - with management controls */}
         {activeTab === 'users' && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">All Users ({data.users.length})</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">User</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Email</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Company</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Joined</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.users.map(u => (
-                    <tr key={u.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-500/20 border border-blue-500/30 rounded-full flex items-center justify-center text-xs font-bold text-blue-400">
-                            {(u.full_name || u.email || '?')[0].toUpperCase()}
-                          </div>
-                          <span className="text-sm font-medium text-white">{u.full_name || '—'}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-400">{u.email}</td>
-                      <td className="px-4 py-3 text-sm text-gray-400">{u.company || '—'}</td>
-                      <td className="px-4 py-3 text-xs text-gray-500">{formatShortDate(u.created_at)}</td>
+          <div className="space-y-4">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">All Users ({data.users.length})</h3>
+                <p className="text-xs text-gray-500">Click actions to manage users</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-800">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">User</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Email</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Plan</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Joined</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.users.map(u => {
+                      const sub = getUserSubscription(u.id)
+                      const isCeo = u.email?.toLowerCase() === CEO_EMAIL
+                      return (
+                        <tr key={u.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-500/20 border border-blue-500/30 rounded-full flex items-center justify-center text-xs font-bold text-blue-400">
+                                {(u.full_name || u.email || '?')[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-white">{u.full_name || '—'}</span>
+                                {isCeo && <span className="ml-2 text-[9px] bg-gradient-to-r from-blue-600 to-purple-600 text-white px-1.5 py-0.5 rounded font-bold">CEO</span>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-400">{u.email}</td>
+                          <td className="px-4 py-3">
+                            {sub ? (
+                              <span className={`text-xs px-2 py-1 rounded-full font-bold uppercase ${
+                                sub.plan === 'enterprise' ? 'bg-orange-500/20 text-orange-400' :
+                                sub.plan === 'professional' ? 'bg-purple-500/20 text-purple-400' :
+                                sub.plan === 'starter' ? 'bg-blue-500/20 text-blue-400' :
+                                'bg-gray-700 text-gray-400'
+                              }`}>{sub.plan || 'free'}</span>
+                            ) : (
+                              <span className="text-xs text-gray-600">No plan</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            {sub ? (
+                              <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                                sub.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                                sub.status === 'past_due' ? 'bg-red-500/20 text-red-400' :
+                                sub.status === 'trialing' ? 'bg-blue-500/20 text-blue-400' :
+                                sub.status === 'cancelled' ? 'bg-gray-700 text-gray-400' :
+                                'bg-gray-700 text-gray-400'
+                              }`}>{sub.status}</span>
+                            ) : (
+                              <span className="text-xs text-gray-600">Free</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-gray-500">{formatShortDate(u.created_at)}</td>
+                          <td className="px-4 py-3">
+                            {!isCeo && (
+                              <div className="flex items-center justify-end gap-1">
+                                {!sub || sub.status === 'cancelled' ? (
+                                  <button
+                                    onClick={() => { setSelectedUser(u); setModalAction('grant_free_access'); setGrantPlan('professional') }}
+                                    className="text-[10px] px-2 py-1 bg-green-600/20 text-green-400 border border-green-600/30 rounded hover:bg-green-600/30 transition-colors font-bold"
+                                  >
+                                    Grant Access
+                                  </button>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => { setSelectedUser(u); setModalAction('change_plan'); setGrantPlan(sub.plan || 'professional') }}
+                                      className="text-[10px] px-2 py-1 bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded hover:bg-blue-600/30 transition-colors font-bold"
+                                    >
+                                      Change Plan
+                                    </button>
+                                    <button
+                                      onClick={() => { setSelectedUser(u); setModalAction('revoke_access') }}
+                                      className="text-[10px] px-2 py-1 bg-yellow-600/20 text-yellow-400 border border-yellow-600/30 rounded hover:bg-yellow-600/30 transition-colors font-bold"
+                                    >
+                                      Revoke
+                                    </button>
+                                  </>
+                                )}
+                                <button
+                                  onClick={() => { setSelectedUser(u); setModalAction('delete_user') }}
+                                  className="text-[10px] px-2 py-1 bg-red-600/20 text-red-400 border border-red-600/30 rounded hover:bg-red-600/30 transition-colors font-bold"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {data.users.length === 0 && <p className="p-8 text-center text-gray-600">No users yet</p>}
             </div>
-            {data.users.length === 0 && <p className="p-8 text-center text-gray-600">No users yet</p>}
           </div>
         )}
 
@@ -393,7 +587,7 @@ export default function CEOPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-800">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">User ID</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">User</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Plan</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Period End</th>
@@ -401,29 +595,32 @@ export default function CEOPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.subscriptions.all.map(s => (
-                      <tr key={s.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
-                        <td className="px-4 py-3 text-xs text-gray-400 font-mono">{s.user_id?.slice(0, 8)}...</td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs px-2 py-1 rounded-full font-bold uppercase ${
-                            s.plan === 'enterprise' ? 'bg-orange-500/20 text-orange-400' :
-                            s.plan === 'professional' ? 'bg-purple-500/20 text-purple-400' :
-                            s.plan === 'starter' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-gray-700 text-gray-400'
-                          }`}>{s.plan || 'free'}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                            s.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                            s.status === 'past_due' ? 'bg-red-500/20 text-red-400' :
-                            s.status === 'trialing' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-gray-700 text-gray-400'
-                          }`}>{s.status}</span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-gray-500">{s.current_period_end ? formatShortDate(s.current_period_end) : '—'}</td>
-                        <td className="px-4 py-3 text-xs text-gray-500">{formatShortDate(s.created_at)}</td>
-                      </tr>
-                    ))}
+                    {data.subscriptions.all.map(s => {
+                      const user = data.users.find(u => u.id === s.user_id)
+                      return (
+                        <tr key={s.id} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
+                          <td className="px-4 py-3 text-sm text-gray-300">{user?.email || s.user_id?.slice(0, 8) + '...'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`text-xs px-2 py-1 rounded-full font-bold uppercase ${
+                              s.plan === 'enterprise' ? 'bg-orange-500/20 text-orange-400' :
+                              s.plan === 'professional' ? 'bg-purple-500/20 text-purple-400' :
+                              s.plan === 'starter' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-gray-700 text-gray-400'
+                            }`}>{s.plan || 'free'}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                              s.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                              s.status === 'past_due' ? 'bg-red-500/20 text-red-400' :
+                              s.status === 'trialing' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-gray-700 text-gray-400'
+                            }`}>{s.status}</span>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-gray-500">{s.current_period_end ? formatShortDate(s.current_period_end) : '—'}</td>
+                          <td className="px-4 py-3 text-xs text-gray-500">{formatShortDate(s.created_at)}</td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
