@@ -8,7 +8,7 @@ import DashboardLayout from '../../components/DashboardLayout'
 interface Subscription {
   id: string
   status: string
-  plan_id: string
+  plan: string
   stripe_customer_id: string
   stripe_subscription_id: string
   current_period_start: string
@@ -77,7 +77,7 @@ export default function BillingPage() {
     }
   }
 
-  const plan = subscription ? planDetails[subscription.plan_id] || null : null
+  const plan = subscription ? planDetails[subscription.plan] || null : null
 
   return (
     <DashboardLayout title="Billing & Subscription" subtitle="Manage your plan and payment methods">

@@ -19,13 +19,20 @@ export default function SettingsPage() {
 
   // Notifications state
   const [notifications, setNotifications] = useState({
-    email_notifications: true, sms_notifications: false, lead_alerts: true, appointment_reminders: true,
+    notifications_email: true,
+    notifications_sms: false,
+    notifications_push: true,
+    notifications_marketing: false,
   })
 
-  // API Keys state
+  // API Keys state — stored as JSONB in user_settings.api_keys
   const [apiKeys, setApiKeys] = useState({
-    whatsapp_api_key: '', twilio_sid: '', twilio_auth_token: '', sendgrid_api_key: '',
-    zapier_webhook_url: '', google_calendar_key: '',
+    whatsapp_api_key: '',
+    twilio_sid: '',
+    twilio_auth_token: '',
+    sendgrid_api_key: '',
+    zapier_webhook_url: '',
+    google_calendar_key: '',
   })
 
   useEffect(() => { fetchSettings() }, [])
@@ -58,7 +65,7 @@ export default function SettingsPage() {
         }))
       }
 
-      // Fetch API keys from user_settings
+      // Fetch settings from user_settings table
       const { data: settings } = await supabase
         .from('user_settings')
         .select('*')
@@ -67,19 +74,18 @@ export default function SettingsPage() {
 
       if (settings) {
         setNotifications({
-          email_notifications: settings.email_notifications ?? true,
-          sms_notifications: settings.sms_notifications ?? false,
-          lead_alerts: settings.lead_alerts ?? true,
-          appointment_reminders: settings.appointment_reminders ?? true,
+          notifications_email: settings.notifications_email ?? true,
+          notifications_sms: settings.notifications_sms ?? false,
+          notifications_push: settings.notifications_push ?? true,
+          notifications_marketing: settings.notifications_marketing ?? false,
         })
-        setApiKeys({
-          whatsapp_api_key: settings.whatsapp_api_key || '',
-          twilio_sid: settings.twilio_sid || '',
-          twilio_auth_token: settings.twilio_auth_token || '',
-          sendgrid_api_key: settings.sendgrid_api_key || '',
-          zapier_webhook_url: settings.zapier_webhook_url || '',
-          google_calendar_key: settings.google_calendar_key || '',
-        })
+        // api_keys is a JSONB column
+        if (settings.api_keys && typeof settings.api_keys === 'object') {
+          setApiKeys(prev => ({
+            ...prev,
+            ...(settings.api_keys as Record<string, string>),
+          }))
+        }
       }
     } catch (err) {
       console.error('Settings fetch error:', err)
@@ -153,8 +159,11 @@ export default function SettingsPage() {
 
       await supabase.from('user_settings').upsert({
         user_id: user.id,
-        ...notifications,
-      })
+        notifications_email: notifications.notifications_email,
+        notifications_sms: notifications.notifications_sms,
+        notifications_push: notifications.notifications_push,
+        notifications_marketing: notifications.notifications_marketing,
+      }, { onConflict: 'user_id' })
       showMessage('success', 'Notification preferences saved')
     } catch (err: any) {
       showMessage('error', err.message || 'Failed to save notifications')
@@ -171,8 +180,8 @@ export default function SettingsPage() {
 
       await supabase.from('user_settings').upsert({
         user_id: user.id,
-        ...apiKeys,
-      })
+        api_keys: apiKeys,
+      }, { onConflict: 'user_id' })
       showMessage('success', 'API keys saved securely')
     } catch (err: any) {
       showMessage('error', err.message || 'Failed to save API keys')
@@ -286,10 +295,10 @@ export default function SettingsPage() {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Notification Preferences</h2>
                 <div className="space-y-5">
                   {[
-                    { key: 'email_notifications', label: 'Email Notifications', desc: 'Receive email updates about your account' },
-                    { key: 'sms_notifications', label: 'SMS Notifications', desc: 'Get text message alerts' },
-                    { key: 'lead_alerts', label: 'Lead Alerts', desc: 'Get notified when new leads come in' },
-                    { key: 'appointment_reminders', label: 'Appointment Reminders', desc: 'Reminders before scheduled appointments' },
+                    { key: 'notifications_email', label: 'Email Notifications', desc: 'Receive email updates about your account' },
+                    { key: 'notifications_sms', label: 'SMS Notifications', desc: 'Get text message alerts' },
+                    { key: 'notifications_push', label: 'Push Notifications', desc: 'Browser push notification alerts' },
+                    { key: 'notifications_marketing', label: 'Marketing Updates', desc: 'Receive product news and special offers' },
                   ].map(item => (
                     <div key={item.key} className="flex items-center justify-between">
                       <div>

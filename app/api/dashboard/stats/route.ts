@@ -16,7 +16,7 @@ export async function GET() {
 
     const [clientsRes, leadsRes, appointmentsRes, automationsRes] = await Promise.all([
       supabase.from('clients').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-      supabase.from('leads').select('id', { count: 'exact', head: true }).eq('user_id', userId).neq('stage', 'converted'),
+      supabase.from('leads').select('id', { count: 'exact', head: true }).eq('user_id', userId).neq('status', 'converted'),
       supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('appointment_date', todayStr).neq('status', 'cancelled'),
       supabase.from('automations').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('is_active', true),
     ])

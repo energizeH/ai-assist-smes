@@ -40,7 +40,7 @@ export async function POST() {
     // Create Stripe Customer Portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL}/dashboard/billing`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://ai-assist-smes.vercel.app'}/dashboard/billing`,
     })
 
     return NextResponse.json({ url: portalSession.url })

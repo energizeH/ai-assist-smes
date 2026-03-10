@@ -66,7 +66,7 @@ export async function POST(request: Request) {
           full_name: name,
           company: company || null,
         },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://ai-assist-smes.vercel.app'}/auth/callback`,
       },
     });
 

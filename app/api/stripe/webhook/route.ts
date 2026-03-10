@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2023-10-16',
+  });
+}
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -19,6 +23,9 @@ export async function POST(req: NextRequest) {
   if (!sig || !webhookSecret) {
     return NextResponse.json({ error: 'Missing stripe signature or webhook secret' }, { status: 400 });
   }
+
+  const stripe = getStripe();
+  const supabase = getSupabaseAdmin();
 
   let event: Stripe.Event;
 
@@ -45,7 +52,7 @@ export async function POST(req: NextRequest) {
             .upsert(
               {
                 user_id: userId,
-                plan_id: planId,
+                plan: planId,
                 stripe_customer_id: customerId,
                 stripe_subscription_id: subscriptionId,
                 status: 'active',
@@ -115,7 +122,7 @@ export async function POST(req: NextRequest) {
             .from('subscriptions')
             .update({
               status: sub.status,
-              plan_id: sub.metadata?.plan_id,
+              plan: sub.metadata?.plan_id || undefined,
               current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
               current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
             })

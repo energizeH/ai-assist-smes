@@ -10,7 +10,6 @@ const plans = [
     price: '£49',
     annualPrice: '£39',
     period: '/month',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER,
     description: 'Perfect for small businesses getting started with AI automation',
     features: [
       'AI Chatbot (up to 1,000 messages/month)',
@@ -28,7 +27,6 @@ const plans = [
     price: '£149',
     annualPrice: '£119',
     period: '/month',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
     description: 'Ideal for growing businesses seeking advanced automation',
     features: [
       'AI Chatbot (up to 10,000 messages/month)',
@@ -48,7 +46,6 @@ const plans = [
     price: '£299',
     annualPrice: '£239',
     period: '/month',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE,
     description: 'For established businesses requiring complete automation solutions',
     features: [
       'AI Chatbot (unlimited messages)',
