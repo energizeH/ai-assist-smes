@@ -12,8 +12,8 @@ function getResend(): Resend {
   return _resend;
 }
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'AI-Assist <noreply@ai-assist-smes.co.uk>';
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@ai-assist-smes.co.uk';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'AI-Assist <onboarding@resend.dev>';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'hxssxn772@gmail.com';
 
 // ── Email Templates ─────────────────────────────────────────────
 

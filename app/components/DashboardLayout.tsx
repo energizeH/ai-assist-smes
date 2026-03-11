@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import NotificationBell from './NotificationBell'
+import { ToastProvider } from './Toast'
 
 const navItems = [
   { id: 'overview', label: 'Overview', href: '/dashboard', icon: '📊' },
@@ -60,6 +62,7 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
   }
 
   return (
+    <ToastProvider>
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Top Header */}
       <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
@@ -85,6 +88,7 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
                   {userName}
                 </span>
               )}
+              <NotificationBell />
               {userEmail.toLowerCase() === 'hxssxn772@gmail.com' && (
                 <Link
                   href="/ceo"
@@ -167,5 +171,6 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
         {children}
       </main>
     </div>
+    </ToastProvider>
   )
 }
