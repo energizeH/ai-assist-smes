@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { checkRateLimit, getClientIP, RATE_LIMITS } from '../../../lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit check
+    const ip = getClientIP(request)
+    const limit = checkRateLimit(`reset:${ip}`, RATE_LIMITS.passwordReset)
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: `Too many reset attempts. Please try again in ${Math.ceil(limit.resetIn / 60)} minutes.` },
+        { status: 429 }
+      )
+    }
+
     const { email } = await request.json()
 
     if (!email) {

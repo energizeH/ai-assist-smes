@@ -38,6 +38,9 @@ export default function LegalFooter() {
               <li><Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition">Terms of Service</Link></li>
               <li><Link href="/cookies" className="hover:text-white transition">Cookie Policy</Link></li>
+              <li><Link href="/refund-policy" className="hover:text-white transition">Refund Policy</Link></li>
+              <li><Link href="/data-processing" className="hover:text-white transition">Data Processing</Link></li>
+              <li><Link href="/status" className="hover:text-white transition">System Status</Link></li>
             </ul>
           </div>
         </div>
@@ -47,6 +50,8 @@ export default function LegalFooter() {
             <Link href="/privacy" className="hover:text-gray-300 transition">Privacy</Link>
             <Link href="/terms" className="hover:text-gray-300 transition">Terms</Link>
             <Link href="/cookies" className="hover:text-gray-300 transition">Cookies</Link>
+            <Link href="/refund-policy" className="hover:text-gray-300 transition">Refunds</Link>
+            <Link href="/status" className="hover:text-gray-300 transition">Status</Link>
           </div>
         </div>
       </div>

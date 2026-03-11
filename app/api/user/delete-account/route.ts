@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import Stripe from 'stripe'
 
 function getAdminClient() {
   return createClient(
@@ -36,40 +37,64 @@ export async function DELETE(request: Request) {
       )
     }
 
-    // Check if user has an active Stripe subscription and cancel it
     const supabaseAdmin = getAdminClient()
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('stripe_customer_id, subscription_id')
-      .eq('id', user.id)
+
+    // Cancel any active Stripe subscription
+    const { data: subscription } = await supabaseAdmin
+      .from('subscriptions')
+      .select('stripe_subscription_id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
       .single()
 
-    if (profile?.subscription_id) {
+    if (subscription?.stripe_subscription_id && process.env.STRIPE_SECRET_KEY) {
       try {
-        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-        await stripe.subscriptions.cancel(profile.subscription_id, {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' })
+        await stripe.subscriptions.cancel(subscription.stripe_subscription_id, {
           prorate: true,
         })
       } catch (stripeErr) {
         console.error('Stripe subscription cancel error:', stripeErr)
-        // Continue with deletion even if Stripe fails — log for manual follow-up
+        // Continue with deletion even if Stripe fails
       }
     }
 
-    // Delete user data from all tables (order matters for foreign keys)
-    const tablesToClean = ['leads', 'appointments', 'user_settings', 'profiles']
+    // Delete user data from ALL tables (order matters for foreign keys)
+    const tablesToClean = [
+      { table: 'activities', column: 'user_id' },
+      { table: 'messages', column: 'user_id' },
+      { table: 'automations', column: 'user_id' },
+      { table: 'knowledge_base', column: 'user_id' },
+      { table: 'appointments', column: 'user_id' },
+      { table: 'leads', column: 'user_id' },
+      { table: 'clients', column: 'user_id' },
+      { table: 'subscriptions', column: 'user_id' },
+      { table: 'user_settings', column: 'user_id' },
+      { table: 'profiles', column: 'id' },
+    ]
 
-    for (const table of tablesToClean) {
+    const deletionErrors: string[] = []
+
+    for (const { table, column } of tablesToClean) {
       try {
-        const column = table === 'profiles' ? 'id' : 'user_id'
-        await supabaseAdmin.from(table).delete().eq(column, user.id)
+        const { error: deleteError } = await supabaseAdmin
+          .from(table)
+          .delete()
+          .eq(column, user.id)
+        if (deleteError) {
+          deletionErrors.push(`${table}: ${deleteError.message}`)
+        }
       } catch (err) {
         console.error(`Error deleting from ${table}:`, err)
-        // Continue cleanup even if individual tables fail
+        deletionErrors.push(`${table}: unexpected error`)
       }
     }
 
-    // Delete the auth user (this is the final step)
+    if (deletionErrors.length > 0) {
+      console.error('Partial deletion errors:', deletionErrors)
+    }
+
+    // Delete the auth user (final step)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
 
     if (deleteError) {

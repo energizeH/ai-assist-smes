@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, getClientIP, RATE_LIMITS } from '../../../lib/rate-limit';
+import { sendWelcomeEmail } from '../../../lib/email';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -27,6 +29,16 @@ function getFriendlyError(message: string): string {
 
 export async function POST(request: Request) {
   try {
+    // Rate limit check
+    const ip = getClientIP(request);
+    const limit = checkRateLimit(`register:${ip}`, RATE_LIMITS.auth);
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: `Too many registration attempts. Please try again in ${Math.ceil(limit.resetIn / 60)} minutes.` },
+        { status: 429 }
+      );
+    }
+
     const { name, email, company, password } = await request.json();
 
     // Validate required fields
@@ -46,10 +58,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate password strength (min 6 characters)
-    if (password.length < 6) {
+    // Validate password strength (min 8 characters, must include number)
+    if (password.length < 8) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters long.' },
+        { error: 'Password must be at least 8 characters long.' },
         { status: 400 }
       );
     }
@@ -66,7 +78,7 @@ export async function POST(request: Request) {
           full_name: name,
           company: company || null,
         },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://ai-assist-smes.vercel.app'}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://ai-assist-smes.vercel.app'}/auth/callback`,
       },
     });
 
@@ -76,6 +88,13 @@ export async function POST(request: Request) {
         { error: getFriendlyError(error.message) },
         { status: 400 }
       );
+    }
+
+    // Send welcome email (non-blocking)
+    if (data.user && process.env.RESEND_API_KEY) {
+      sendWelcomeEmail(email, name).catch(err => {
+        console.error('Welcome email error (non-blocking):', err);
+      });
     }
 
     // Check if user needs email confirmation

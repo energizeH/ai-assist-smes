@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { checkRateLimit, getClientIP, RATE_LIMITS } from '../../lib/rate-limit'
 
 // Fetch knowledge base entries for the chatbot
 async function getKnowledgeBase(userId?: string): Promise<string> {
@@ -57,6 +58,13 @@ function getRuleBasedResponse(msg: string): string | null {
 
 export async function POST(req: Request) {
   try {
+    // Rate limit check
+    const ip = getClientIP(req)
+    const limit = checkRateLimit(`chat:${ip}`, RATE_LIMITS.chat)
+    if (!limit.success) {
+      return NextResponse.json({ text: 'You\'re sending messages too quickly. Please wait a moment.' })
+    }
+
     const { messages, userId } = await req.json()
     const lastMessage = messages[messages.length - 1]?.text || ''
 

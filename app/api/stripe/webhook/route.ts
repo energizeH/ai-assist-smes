@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { sendSubscriptionConfirmation, sendPaymentFailedEmail, sendSubscriptionCancelledEmail } from '../../../lib/email';
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -84,6 +85,18 @@ export async function POST(req: NextRequest) {
             title: `Subscribed to ${planId} plan`,
             description: 'Subscription activated successfully',
           }]);
+
+          // Send confirmation email
+          if (process.env.RESEND_API_KEY && session.customer_email) {
+            const planPrices: Record<string, string> = { starter: '£49', professional: '£149', enterprise: '£299' };
+            const planName = planId.charAt(0).toUpperCase() + planId.slice(1);
+            sendSubscriptionConfirmation(
+              session.customer_email,
+              session.metadata?.user_name || 'there',
+              planName,
+              planPrices[planId] || planId
+            ).catch(err => console.error('Subscription email error:', err));
+          }
         }
         break;
       }
@@ -127,6 +140,14 @@ export async function POST(req: NextRequest) {
               title: 'Payment failed',
               description: 'Your subscription payment could not be processed. Please update your payment method.',
             }]);
+
+            // Send payment failed email
+            if (process.env.RESEND_API_KEY) {
+              const { data: profile } = await supabase.from('profiles').select('email, full_name').eq('id', userId).single();
+              if (profile?.email) {
+                sendPaymentFailedEmail(profile.email, profile.full_name || 'there').catch(err => console.error('Payment failed email error:', err));
+              }
+            }
           }
         }
         break;
@@ -148,6 +169,15 @@ export async function POST(req: NextRequest) {
             title: 'Subscription cancelled',
             description: 'Your subscription has been cancelled. You can resubscribe anytime.',
           }]);
+
+          // Send cancellation email
+          if (process.env.RESEND_API_KEY) {
+            const { data: profile } = await supabase.from('profiles').select('email, full_name').eq('id', userId).single();
+            if (profile?.email) {
+              const endDate = new Date(sub.current_period_end * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+              sendSubscriptionCancelledEmail(profile.email, profile.full_name || 'there', endDate).catch(err => console.error('Cancel email error:', err));
+            }
+          }
         }
         break;
       }

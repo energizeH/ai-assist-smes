@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { checkRateLimit, getClientIP, RATE_LIMITS } from '../../../lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit check (brute force protection)
+    const ip = getClientIP(request)
+    const limit = checkRateLimit(`login:${ip}`, RATE_LIMITS.auth)
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: `Too many login attempts. Please try again in ${Math.ceil(limit.resetIn / 60)} minutes.` },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     const { email, password } = body
 

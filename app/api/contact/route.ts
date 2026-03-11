@@ -1,10 +1,21 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import nodemailer from 'nodemailer'
+import { sendContactFormNotification, sendContactFormConfirmation } from '../../lib/email'
+import { checkRateLimit, getClientIP, RATE_LIMITS } from '../../lib/rate-limit'
 
 export async function POST(request: Request) {
   try {
-    const { name, email, phone, company, service, message } = await request.json()
+    // Rate limit check
+    const ip = getClientIP(request)
+    const limit = checkRateLimit(`contact:${ip}`, RATE_LIMITS.contact)
+    if (!limit.success) {
+      return NextResponse.json(
+        { error: `Too many submissions. Please try again in ${Math.ceil(limit.resetIn / 60)} minutes.` },
+        { status: 429 }
+      )
+    }
+
+    const { name, email, phone, company, service, subject, message } = await request.json()
 
     // Validate required fields
     if (!name || !email || !message) {
@@ -23,53 +34,46 @@ export async function POST(request: Request) {
       )
     }
 
-    // Save to database (always works even if email fails)
+    // Sanitise inputs (basic XSS prevention)
+    const sanitise = (str: string) => str.replace(/[<>]/g, '').trim()
+    const safeName = sanitise(name)
+    const safeSubject = sanitise(subject || 'General Enquiry')
+    const safeMessage = sanitise(message)
+
+    // Save to database
     try {
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
       await supabase.from('contact_submissions').insert([{
-        name,
+        name: safeName,
         email,
         phone: phone || null,
         company: company || null,
         service: service || null,
-        message,
+        subject: safeSubject,
+        message: safeMessage,
+        status: 'new',
       }])
     } catch (dbErr) {
       console.error('DB save error (non-blocking):', dbErr)
     }
 
-    // Send email notification if Gmail is configured
-    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+    // Send email notification to team + confirmation to user
+    if (process.env.RESEND_API_KEY) {
       try {
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.GMAIL_USER,
-            pass: process.env.GMAIL_APP_PASSWORD,
-          },
-        })
-
-        await transporter.sendMail({
-          from: process.env.GMAIL_USER,
-          to: process.env.GMAIL_USER,
-          replyTo: email,
-          subject: `New Contact: ${name} - AI-Assist for SMEs`,
-          html: `
-            <h2>New Contact Form Submission</h2>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-            <p><strong>Company:</strong> ${company || 'Not provided'}</p>
-            <p><strong>Service:</strong> ${service || 'Not specified'}</p>
-            <p><strong>Message:</strong></p>
-            <p>${message.replace(/\n/g, '<br>')}</p>
-            <hr>
-            <p style="color: #666; font-size: 12px;">Sent from AI-Assist for SMEs contact form</p>
-          `,
-        })
+        await Promise.all([
+          sendContactFormNotification({
+            name: safeName,
+            email,
+            subject: safeSubject,
+            message: safeMessage,
+            phone: phone || undefined,
+            company: company || undefined,
+          }),
+          sendContactFormConfirmation(email, safeName),
+        ])
       } catch (emailErr) {
         console.error('Email send error (non-blocking):', emailErr)
       }
