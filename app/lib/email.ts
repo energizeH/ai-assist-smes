@@ -12,8 +12,8 @@ function getResend(): Resend {
   return _resend;
 }
 
-// TODO: Switch FROM_EMAIL to 'AI-Assist <noreply@aiassistsmes.co.uk>' once the custom domain is verified on Resend
-const FROM_EMAIL = process.env.FROM_EMAIL || 'AI-Assist <onboarding@resend.dev>';
+// Domain verified on Resend (2026-03-11) — DKIM + SPF confirmed
+const FROM_EMAIL = process.env.FROM_EMAIL || 'AI-Assist <noreply@aiassistsmes.co.uk>';
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'hxssxn772@gmail.com';
 
 // ── Email Templates ─────────────────────────────────────────────
