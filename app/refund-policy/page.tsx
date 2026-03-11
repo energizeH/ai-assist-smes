@@ -54,7 +54,7 @@ export default function RefundPolicyPage() {
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-3">4. How to Request a Refund</h2>
             <p>To request a refund within the 14-day cooling-off period, please contact our support team using one of the following methods:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> Send your refund request to <a href="mailto:support@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@ai-assist-smes.co.uk</a></li>
+              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> Send your refund request to <a href="mailto:support@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@aiassistsmes.co.uk</a></li>
               <li><strong className="text-gray-800 dark:text-gray-200">Subject Line:</strong> Please include &ldquo;Refund Request&rdquo; in the subject line of your email</li>
             </ul>
             <p className="mt-2">When submitting your refund request, please include:</p>
@@ -101,7 +101,7 @@ export default function RefundPolicyPage() {
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-3">9. Contact Us</h2>
             <p>If you have any questions about this Refund Policy or wish to discuss a refund request:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> <a href="mailto:support@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@ai-assist-smes.co.uk</a></li>
+              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> <a href="mailto:support@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@aiassistsmes.co.uk</a></li>
               <li><strong className="text-gray-800 dark:text-gray-200">Address:</strong> AI-Assist for SMEs, Birmingham, United Kingdom</li>
             </ul>
           </section>

@@ -3,7 +3,7 @@ import './globals.css'
 import ThemeToggle from './components/ThemeToggle'
 import CookieConsent from './components/CookieConsent'
 
-const siteUrl = 'https://ai-assist-smes.vercel.app'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aiassistsmes.co.uk'
 
 export const viewport: Viewport = {
   themeColor: '#2563EB',

@@ -109,8 +109,8 @@ export default function StatusPage() {
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             This page is updated manually. For urgent issues, contact{' '}
-            <a href="mailto:support@ai-assist-smes.co.uk" className="text-blue-600 hover:underline">
-              support@ai-assist-smes.co.uk
+            <a href="mailto:support@aiassistsmes.co.uk" className="text-blue-600 hover:underline">
+              support@aiassistsmes.co.uk
             </a>
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">

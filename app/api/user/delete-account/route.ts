@@ -100,7 +100,7 @@ export async function DELETE(request: Request) {
     if (deleteError) {
       console.error('Auth user deletion error:', deleteError)
       return NextResponse.json(
-        { error: 'Failed to delete account. Please contact support at support@ai-assist-smes.co.uk.' },
+        { error: 'Failed to delete account. Please contact support at support@aiassistsmes.co.uk.' },
         { status: 500 }
       )
     }
@@ -112,7 +112,7 @@ export async function DELETE(request: Request) {
   } catch (error) {
     console.error('Account deletion error:', error)
     return NextResponse.json(
-      { error: 'Something went wrong. Please contact support at support@ai-assist-smes.co.uk.' },
+      { error: 'Something went wrong. Please contact support at support@aiassistsmes.co.uk.' },
       { status: 500 }
     )
   }

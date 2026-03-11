@@ -12,6 +12,7 @@ function getResend(): Resend {
   return _resend;
 }
 
+// TODO: Switch FROM_EMAIL to 'AI-Assist <noreply@aiassistsmes.co.uk>' once the custom domain is verified on Resend
 const FROM_EMAIL = process.env.FROM_EMAIL || 'AI-Assist <onboarding@resend.dev>';
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'hxssxn772@gmail.com';
 
@@ -53,7 +54,7 @@ function baseTemplate(content: string): string {
       <div class="footer">
         <p>&copy; ${new Date().getFullYear()} AI-Assist for SMEs Ltd. All rights reserved.</p>
         <p>Birmingham, United Kingdom</p>
-        <p><a href="https://ai-assist-smes.vercel.app/unsubscribe">Unsubscribe</a> &middot; <a href="https://ai-assist-smes.vercel.app/privacy">Privacy Policy</a></p>
+        <p><a href="https://aiassistsmes.co.uk/unsubscribe">Unsubscribe</a> &middot; <a href="https://aiassistsmes.co.uk/privacy">Privacy Policy</a></p>
       </div>
     </div>
   </div>
@@ -75,9 +76,9 @@ export async function sendWelcomeEmail(to: string, name: string) {
       <p><strong>4.</strong> Explore our AI chat assistant</p>
     </div>
     <p style="text-align:center;">
-      <a href="https://ai-assist-smes.vercel.app/dashboard" class="btn">Go to Dashboard</a>
+      <a href="https://aiassistsmes.co.uk/dashboard" class="btn">Go to Dashboard</a>
     </p>
-    <p>If you have any questions, reply to this email or visit our <a href="https://ai-assist-smes.vercel.app/support">Support Centre</a>.</p>
+    <p>If you have any questions, reply to this email or visit our <a href="https://aiassistsmes.co.uk/support">Support Centre</a>.</p>
     <p>Best regards,<br><strong>The AI-Assist Team</strong></p>
   `);
 
@@ -147,9 +148,9 @@ export async function sendContactFormConfirmation(to: string, name: string) {
     <p>Thank you for getting in touch with AI-Assist for SMEs. We've received your enquiry and will respond within <strong>24 hours</strong> during business days.</p>
     <p>In the meantime, you might find these helpful:</p>
     <div class="info-box">
-      <p><a href="https://ai-assist-smes.vercel.app/services">Our Services</a> — See what we offer</p>
-      <p><a href="https://ai-assist-smes.vercel.app/plans">Pricing Plans</a> — Find the right plan</p>
-      <p><a href="https://ai-assist-smes.vercel.app/blog">Blog</a> — AI automation tips for SMEs</p>
+      <p><a href="https://aiassistsmes.co.uk/services">Our Services</a> — See what we offer</p>
+      <p><a href="https://aiassistsmes.co.uk/plans">Pricing Plans</a> — Find the right plan</p>
+      <p><a href="https://aiassistsmes.co.uk/blog">Blog</a> — AI automation tips for SMEs</p>
     </div>
     <p>Best regards,<br><strong>The AI-Assist Team</strong></p>
   `);
@@ -174,9 +175,9 @@ export async function sendSubscriptionConfirmation(to: string, name: string, pla
     </div>
     <p>You now have full access to all ${plan} features. Head to your dashboard to start building automations.</p>
     <p style="text-align:center;">
-      <a href="https://ai-assist-smes.vercel.app/dashboard" class="btn">Go to Dashboard</a>
+      <a href="https://aiassistsmes.co.uk/dashboard" class="btn">Go to Dashboard</a>
     </p>
-    <p>Manage your subscription anytime from <a href="https://ai-assist-smes.vercel.app/dashboard/billing">Billing Settings</a>.</p>
+    <p>Manage your subscription anytime from <a href="https://aiassistsmes.co.uk/dashboard/billing">Billing Settings</a>.</p>
     <p>Best regards,<br><strong>The AI-Assist Team</strong></p>
   `);
 
@@ -195,7 +196,7 @@ export async function sendPaymentFailedEmail(to: string, name: string) {
     <p>We were unable to process your latest subscription payment. Your access may be affected if this isn't resolved.</p>
     <p>Please update your payment method to continue using AI-Assist without interruption.</p>
     <p style="text-align:center;">
-      <a href="https://ai-assist-smes.vercel.app/dashboard/billing" class="btn">Update Payment Method</a>
+      <a href="https://aiassistsmes.co.uk/dashboard/billing" class="btn">Update Payment Method</a>
     </p>
     <p>If you believe this is an error, please contact us at <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>.</p>
     <p>Best regards,<br><strong>The AI-Assist Team</strong></p>
@@ -216,7 +217,7 @@ export async function sendSubscriptionCancelledEmail(to: string, name: string, e
     <p>Your AI-Assist subscription has been cancelled. You'll continue to have access until <strong>${endDate}</strong>.</p>
     <p>We're sorry to see you go. If there's anything we could have done better, we'd love to hear from you.</p>
     <p style="text-align:center;">
-      <a href="https://ai-assist-smes.vercel.app/plans" class="btn">Resubscribe Anytime</a>
+      <a href="https://aiassistsmes.co.uk/plans" class="btn">Resubscribe Anytime</a>
     </p>
     <p>Best regards,<br><strong>The AI-Assist Team</strong></p>
   `);

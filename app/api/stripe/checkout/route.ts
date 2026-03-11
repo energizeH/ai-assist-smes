@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       customerId = customer.id
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://ai-assist-smes.vercel.app'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://aiassistsmes.co.uk'
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

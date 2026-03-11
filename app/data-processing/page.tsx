@@ -183,7 +183,7 @@ export default function DataProcessingPage() {
               <li><strong className="text-gray-800 dark:text-gray-200">Data portability</strong> &mdash; receive their data in a structured, machine-readable format (Article 20)</li>
               <li><strong className="text-gray-800 dark:text-gray-200">Object</strong> to processing based on legitimate interests or for direct marketing (Article 21)</li>
             </ul>
-            <p className="mt-2">To exercise any of these rights, please contact us at <a href="mailto:privacy@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@ai-assist-smes.co.uk</a>. We will respond within one month of receiving your request.</p>
+            <p className="mt-2">To exercise any of these rights, please contact us at <a href="mailto:privacy@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@aiassistsmes.co.uk</a>. We will respond within one month of receiving your request.</p>
           </section>
 
           <section>
@@ -195,7 +195,7 @@ export default function DataProcessingPage() {
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-3">11. Contact Us</h2>
             <p>For any questions about this Data Processing Policy or our data processing practices:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong className="text-gray-800 dark:text-gray-200">Data Protection Officer:</strong> <a href="mailto:privacy@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@ai-assist-smes.co.uk</a></li>
+              <li><strong className="text-gray-800 dark:text-gray-200">Data Protection Officer:</strong> <a href="mailto:privacy@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@aiassistsmes.co.uk</a></li>
               <li><strong className="text-gray-800 dark:text-gray-200">Address:</strong> AI-Assist for SMEs, Birmingham, United Kingdom</li>
             </ul>
             <p className="mt-2">You also have the right to lodge a complaint with the Information Commissioner&apos;s Office (ICO) at <a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">ico.org.uk/make-a-complaint</a> or by calling 0303 123 1113.</p>

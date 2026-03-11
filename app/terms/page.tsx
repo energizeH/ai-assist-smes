@@ -93,7 +93,7 @@ export default function TermsPage() {
               <li>Your data will be retained for 30 days after cancellation, after which it may be deleted</li>
             </ul>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">6.2 Refunds</h3>
-            <p>Under the Consumer Contracts (Information, Cancellation and Additional Charges) Regulations 2013, you have a 14-day cooling-off period from the date of your first subscription purchase. To request a refund within this period, contact us at <a href="mailto:support@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@ai-assist-smes.co.uk</a>. After the 14-day period, subscription fees are non-refundable.</p>
+            <p>Under the Consumer Contracts (Information, Cancellation and Additional Charges) Regulations 2013, you have a 14-day cooling-off period from the date of your first subscription purchase. To request a refund within this period, contact us at <a href="mailto:support@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@aiassistsmes.co.uk</a>. After the 14-day period, subscription fees are non-refundable.</p>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2">6.3 Cancellation by Us</h3>
             <p>We may suspend or terminate your account if you breach these Terms, fail to pay subscription fees, or engage in activities harmful to the Service or other users. In the event of termination for cause, no refund will be provided.</p>
           </section>
@@ -157,7 +157,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-3">13. Dispute Resolution</h2>
-            <p>If a dispute arises under these Terms, we encourage you to contact us first at <a href="mailto:support@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@ai-assist-smes.co.uk</a> to resolve the matter informally. If the dispute cannot be resolved informally within 30 days, either party may pursue resolution through the courts of England and Wales.</p>
+            <p>If a dispute arises under these Terms, we encourage you to contact us first at <a href="mailto:support@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@aiassistsmes.co.uk</a> to resolve the matter informally. If the dispute cannot be resolved informally within 30 days, either party may pursue resolution through the courts of England and Wales.</p>
             <p className="mt-2">If you are a consumer, you may also be entitled to use the UK&apos;s alternative dispute resolution (ADR) procedures.</p>
           </section>
 
@@ -180,8 +180,8 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-3">17. Contact Us</h2>
             <p>For any questions about these Terms of Service:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> <a href="mailto:legal@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">legal@ai-assist-smes.co.uk</a></li>
-              <li><strong className="text-gray-800 dark:text-gray-200">Support:</strong> <a href="mailto:support@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@ai-assist-smes.co.uk</a></li>
+              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> <a href="mailto:legal@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">legal@aiassistsmes.co.uk</a></li>
+              <li><strong className="text-gray-800 dark:text-gray-200">Support:</strong> <a href="mailto:support@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">support@aiassistsmes.co.uk</a></li>
               <li><strong className="text-gray-800 dark:text-gray-200">Address:</strong> AI-Assist for SMEs, Birmingham, United Kingdom</li>
             </ul>
           </section>

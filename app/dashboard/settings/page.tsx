@@ -517,7 +517,7 @@ export default function SettingsPage() {
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
                   <p className="text-sm text-blue-700 dark:text-blue-400">
                     <strong>Your rights:</strong> You can also exercise your data rights by emailing{' '}
-                    <a href="mailto:privacy@ai-assist-smes.co.uk" className="underline">privacy@ai-assist-smes.co.uk</a>.
+                    <a href="mailto:privacy@aiassistsmes.co.uk" className="underline">privacy@aiassistsmes.co.uk</a>.
                     We will respond within one month as required by UK GDPR.
                   </p>
                 </div>

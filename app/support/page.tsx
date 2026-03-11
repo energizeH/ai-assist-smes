@@ -145,8 +145,8 @@ export default function SupportPage() {
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Email Support</h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-2">Get help from our support team</p>
-                    <a href="mailto:support@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">
-                      support@ai-assist-smes.co.uk
+                    <a href="mailto:support@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">
+                      support@aiassistsmes.co.uk
                     </a>
                   </div>
                 </div>

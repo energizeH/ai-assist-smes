@@ -196,7 +196,7 @@ export default function CookiePolicyPage() {
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-3">8. Contact Us</h2>
             <p>If you have questions about our use of cookies, please contact us:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> <a href="mailto:privacy@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@ai-assist-smes.co.uk</a></li>
+              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> <a href="mailto:privacy@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@aiassistsmes.co.uk</a></li>
               <li><strong className="text-gray-800 dark:text-gray-200">Address:</strong> AI-Assist for SMEs, Birmingham, United Kingdom</li>
             </ul>
             <p className="mt-2">For more information about your rights under UK GDPR and how we protect your data, please read our <Link href="/privacy" className="text-blue-600 dark:text-blue-400 hover:underline">Privacy Policy</Link>.</p>

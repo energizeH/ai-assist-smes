@@ -31,7 +31,7 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-3">1. Introduction</h2>
             <p>AI-Assist for SMEs (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;) is committed to protecting your personal data. This Privacy Policy explains how we collect, use, store, and protect your information when you use our AI automation platform and related services (the &ldquo;Service&rdquo;).</p>
             <p>We are registered in England and Wales. Our registered address is Birmingham, United Kingdom. For the purposes of the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018 (DPA 2018), we are the data controller.</p>
-            <p>If you have any questions about this Privacy Policy or our data practices, please contact our Data Protection Officer at <a href="mailto:privacy@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@ai-assist-smes.co.uk</a>.</p>
+            <p>If you have any questions about this Privacy Policy or our data practices, please contact our Data Protection Officer at <a href="mailto:privacy@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@aiassistsmes.co.uk</a>.</p>
           </section>
 
           <section>
@@ -125,7 +125,7 @@ export default function PrivacyPage() {
               <li><strong className="text-gray-800 dark:text-gray-200">Right to Object (Article 21):</strong> You can object to processing based on legitimate interests or direct marketing.</li>
               <li><strong className="text-gray-800 dark:text-gray-200">Rights Related to Automated Decision-Making (Article 22):</strong> You have the right not to be subject to decisions based solely on automated processing that produce legal or significant effects.</li>
             </ul>
-            <p className="mt-2">To exercise any of these rights, please visit your <Link href="/dashboard/settings" className="text-blue-600 dark:text-blue-400 hover:underline">account settings</Link> (for data export and deletion) or email us at <a href="mailto:privacy@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@ai-assist-smes.co.uk</a>. We will respond within one month of receiving your request, as required by law.</p>
+            <p className="mt-2">To exercise any of these rights, please visit your <Link href="/dashboard/settings" className="text-blue-600 dark:text-blue-400 hover:underline">account settings</Link> (for data export and deletion) or email us at <a href="mailto:privacy@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@aiassistsmes.co.uk</a>. We will respond within one month of receiving your request, as required by law.</p>
           </section>
 
           <section>
@@ -165,14 +165,14 @@ export default function PrivacyPage() {
               <li><strong className="text-gray-800 dark:text-gray-200">Helpline:</strong> 0303 123 1113</li>
               <li><strong className="text-gray-800 dark:text-gray-200">Post:</strong> Information Commissioner&apos;s Office, Wycliffe House, Water Lane, Wilmslow, Cheshire, SK9 5AF</li>
             </ul>
-            <p className="mt-2">We would appreciate the opportunity to address your concerns before you contact the ICO, so please reach out to us first at <a href="mailto:privacy@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@ai-assist-smes.co.uk</a>.</p>
+            <p className="mt-2">We would appreciate the opportunity to address your concerns before you contact the ICO, so please reach out to us first at <a href="mailto:privacy@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@aiassistsmes.co.uk</a>.</p>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-3">14. Contact Us</h2>
             <p>For any questions about this Privacy Policy or to exercise your data protection rights:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> <a href="mailto:privacy@ai-assist-smes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@ai-assist-smes.co.uk</a></li>
+              <li><strong className="text-gray-800 dark:text-gray-200">Email:</strong> <a href="mailto:privacy@aiassistsmes.co.uk" className="text-blue-600 dark:text-blue-400 hover:underline">privacy@aiassistsmes.co.uk</a></li>
               <li><strong className="text-gray-800 dark:text-gray-200">Address:</strong> AI-Assist for SMEs, Birmingham, United Kingdom</li>
             </ul>
           </section>
