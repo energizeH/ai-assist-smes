@@ -9,7 +9,8 @@ const plans = [
   {
     name: 'Starter',
     price: '£49',
-    annualPrice: '£39',
+    annualPrice: '£470',
+    annualMonthly: '£39',
     annualSaving: '£120',
     period: '/month',
     description: 'Perfect for small businesses getting started with AI automation',
@@ -27,7 +28,8 @@ const plans = [
   {
     name: 'Professional',
     price: '£149',
-    annualPrice: '£119',
+    annualPrice: '£1,430',
+    annualMonthly: '£119',
     annualSaving: '£360',
     period: '/month',
     description: 'Ideal for growing businesses seeking advanced automation',
@@ -47,7 +49,8 @@ const plans = [
   {
     name: 'Enterprise',
     price: '£299',
-    annualPrice: '£239',
+    annualPrice: '£2,870',
+    annualMonthly: '£239',
     annualSaving: '£720',
     period: '/month',
     description: 'For established businesses requiring complete automation solutions',
@@ -194,18 +197,24 @@ export default function PlansPage() {
                 <p className="text-sm mb-6 text-[#94a3b8]">{plan.description}</p>
 
                 <div className="mb-6">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold gradient-text">
-                      {billingPeriod === 'annual' ? plan.annualPrice : plan.price}
-                    </span>
-                    <span className="text-sm text-[#94a3b8]">{plan.period}</span>
-                  </div>
-                  {billingPeriod === 'annual' && (
-                    <div className="mt-2">
-                      <span className="line-through text-sm mr-2 text-[#64748b]">{plan.price}/month</span>
-                      <span className="inline-block text-xs font-bold px-2 py-0.5 rounded-full bg-[#10b981]/20 text-[#10b981]">
-                        Save {plan.annualSaving}/year
-                      </span>
+                  {billingPeriod === 'annual' ? (
+                    <>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-extrabold gradient-text">{plan.annualPrice}</span>
+                        <span className="text-sm text-[#94a3b8]">/year</span>
+                      </div>
+                      <div className="mt-2">
+                        <span className="text-sm text-[#94a3b8] mr-2">({plan.annualMonthly}/mo)</span>
+                        <span className="line-through text-sm mr-2 text-[#64748b]">{plan.price}/mo</span>
+                        <span className="inline-block text-xs font-bold px-2 py-0.5 rounded-full bg-[#10b981]/20 text-[#10b981]">
+                          Save {plan.annualSaving}/yr
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-extrabold gradient-text">{plan.price}</span>
+                      <span className="text-sm text-[#94a3b8]">{plan.period}</span>
                     </div>
                   )}
                 </div>
