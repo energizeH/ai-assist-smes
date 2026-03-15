@@ -37,7 +37,6 @@ export async function GET(req: NextRequest) {
 
     // Fetch all platform data using service role (bypasses RLS)
     const [
-      { count: totalUsers },
       { data: allProfiles },
       { count: totalClients },
       { count: totalLeads },
@@ -49,8 +48,8 @@ export async function GET(req: NextRequest) {
       { count: clientsThisMonth },
       { count: appointmentsThisMonth },
       { count: activeAutomations },
+      authUsersResponse,
     ] = await Promise.all([
-      admin.from('profiles').select('*', { count: 'exact', head: true }),
       admin.from('profiles').select('id, email, full_name, company, created_at, last_active').order('created_at', { ascending: false }).limit(50),
       admin.from('clients').select('*', { count: 'exact', head: true }),
       admin.from('leads').select('*', { count: 'exact', head: true }),
@@ -62,7 +61,43 @@ export async function GET(req: NextRequest) {
       admin.from('clients').select('*', { count: 'exact', head: true }).gte('created_at', startOfMonth),
       admin.from('appointments').select('*', { count: 'exact', head: true }).gte('created_at', startOfMonth),
       admin.from('automations').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      admin.auth.admin.listUsers(),
     ])
+
+    // Merge auth users with profiles to create a comprehensive user list
+    const authUsers = authUsersResponse?.data?.users || []
+    const profileMap = new Map((allProfiles || []).map(p => [p.id, p]))
+
+    const mergedUsers = authUsers.map(authUser => {
+      const profile = profileMap.get(authUser.id)
+      return {
+        id: authUser.id,
+        email: profile?.email || authUser.email || '',
+        full_name: profile?.full_name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || '',
+        company: profile?.company || authUser.user_metadata?.company || '',
+        created_at: profile?.created_at || authUser.created_at,
+        last_active: profile?.last_active || authUser.last_sign_in_at || null,
+      }
+    })
+
+    // Also add any profile-only users not in auth (edge case)
+    for (const profile of (allProfiles || [])) {
+      if (!authUsers.find(a => a.id === profile.id)) {
+        mergedUsers.push({
+          id: profile.id,
+          email: profile.email || '',
+          full_name: profile.full_name || '',
+          company: profile.company || '',
+          created_at: profile.created_at,
+          last_active: profile.last_active || null,
+        })
+      }
+    }
+
+    // Sort by created_at descending
+    mergedUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+    const totalUsers = mergedUsers.length
 
     // Subscription stats
     const activeSubscriptions = allSubscriptions?.filter(s => s.status === 'active') || []
@@ -117,9 +152,9 @@ export async function GET(req: NextRequest) {
     // User signups over time (last 30 days)
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const recentUsers = allProfiles?.filter(p =>
-      new Date(p.created_at) >= thirtyDaysAgo
-    ) || []
+    const recentUsers = mergedUsers.filter(u =>
+      new Date(u.created_at) >= thirtyDaysAgo
+    )
 
     // Contact submissions stats
     const newContacts = recentContacts?.filter(c => c.status === 'new') || []
@@ -195,10 +230,10 @@ export async function GET(req: NextRequest) {
         return periodEnd && periodEnd >= now && periodEnd <= new Date(sevenDaysFromNow)
       })
       .map(s => {
-        const profile = allProfiles?.find(p => p.id === s.user_id)
+        const user = mergedUsers.find(u => u.id === s.user_id)
         return {
           userId: s.user_id,
-          email: profile?.email || 'Unknown',
+          email: user?.email || 'Unknown',
           plan: s.plan,
           renewalDate: s.current_period_end,
           amount: getPlanPrice(s.plan),
@@ -207,11 +242,11 @@ export async function GET(req: NextRequest) {
 
     // Change 12: Failed payments (past_due subscriptions with profile info)
     const failedPayments = pastDueSubscriptions.map(s => {
-      const profile = allProfiles?.find(p => p.id === s.user_id)
+      const user = mergedUsers.find(u => u.id === s.user_id)
       return {
         userId: s.user_id,
-        email: profile?.email || 'Unknown',
-        name: profile?.full_name || 'Unknown',
+        email: user?.email || 'Unknown',
+        name: user?.full_name || 'Unknown',
         plan: s.plan,
         status: s.status,
         periodEnd: s.current_period_end,
@@ -229,7 +264,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       overview: {
-        totalUsers: totalUsers || 0,
+        totalUsers,
         totalClients: totalClients || 0,
         totalLeads: totalLeads || 0,
         totalAppointments: totalAppointments || 0,
@@ -254,7 +289,7 @@ export async function GET(req: NextRequest) {
         customerCount: stripeCustomerCount,
         refundsThisMonth,
       },
-      users: allProfiles || [],
+      users: mergedUsers,
       contacts: recentContacts || [],
       newContactCount: newContacts.length,
       recentActivities: recentActivities || [],

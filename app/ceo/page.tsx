@@ -927,8 +927,9 @@ export default function CEOPage() {
             </div>
 
             <div className="glass-card-static overflow-hidden">
-              <div className="p-4 border-b border-white/10">
+              <div className="p-4 border-b border-white/10 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-[#94a3b8] uppercase tracking-wide">All Subscriptions</h3>
+                <p className="text-xs text-[#64748b]">Click actions to manage users</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="glass-table">
@@ -939,14 +940,27 @@ export default function CEOPage() {
                       <th>Status</th>
                       <th>Period End</th>
                       <th>Created</th>
+                      <th className="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.subscriptions.all.map(s => {
                       const user = data.users.find(u => u.id === s.user_id)
+                      const isCeo = user?.email?.toLowerCase() === CEO_EMAIL
                       return (
                         <tr key={s.id}>
-                          <td className="text-[#94a3b8]">{user?.email || s.user_id?.slice(0, 8) + '...'}</td>
+                          <td>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-[#3b82f6]/20 border border-[#3b82f6]/30 rounded-full flex items-center justify-center text-xs font-bold text-[#60a5fa]">
+                                {(user?.full_name || user?.email || '?')[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-[#f1f5f9]">{user?.full_name || '—'}</span>
+                                {isCeo && <span className="ml-2 text-[9px] bg-gradient-to-r from-[#3b82f6] to-[#7c3aed] text-white px-1.5 py-0.5 rounded font-bold">CEO</span>}
+                                <p className="text-xs text-[#64748b]">{user?.email || s.user_id?.slice(0, 8) + '...'}</p>
+                              </div>
+                            </div>
+                          </td>
                           <td>
                             <span className={`${
                               s.plan === 'enterprise' ? 'badge-warning' :
@@ -968,6 +982,55 @@ export default function CEOPage() {
                           </td>
                           <td>{s.current_period_end ? formatShortDate(s.current_period_end) : '—'}</td>
                           <td>{formatShortDate(s.created_at)}</td>
+                          <td>
+                            {!isCeo && user && (
+                              <div className="flex items-center justify-end gap-1">
+                                {!s.status || s.status === 'cancelled' ? (
+                                  <>
+                                    <button
+                                      onClick={() => { setSelectedUser(user); setModalAction('grant_free_access'); setGrantPlan('professional') }}
+                                      className="text-[10px] px-2 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded hover:bg-emerald-500/25 transition-colors font-bold"
+                                    >
+                                      Grant Access
+                                    </button>
+                                    <button
+                                      onClick={() => { setSelectedUser(user); setModalAction('reactivate') }}
+                                      className="text-[10px] px-2 py-1 bg-[#3b82f6]/15 text-[#60a5fa] border border-[#3b82f6]/30 rounded hover:bg-[#3b82f6]/25 transition-colors font-bold"
+                                    >
+                                      Reactivate
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => { setSelectedUser(user); setModalAction('change_plan'); setGrantPlan(s.plan || 'professional') }}
+                                      className="text-[10px] px-2 py-1 bg-[#3b82f6]/15 text-[#60a5fa] border border-[#3b82f6]/30 rounded hover:bg-[#3b82f6]/25 transition-colors font-bold"
+                                    >
+                                      Change Plan
+                                    </button>
+                                    <button
+                                      onClick={() => { setSelectedUser(user); setModalAction('revoke_access') }}
+                                      className="text-[10px] px-2 py-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 rounded hover:bg-amber-500/25 transition-colors font-bold"
+                                    >
+                                      Revoke
+                                    </button>
+                                  </>
+                                )}
+                                <button
+                                  onClick={() => { setSelectedUser(user); setModalAction('gift_membership'); setGrantPlan('professional'); setGiftMonths(1) }}
+                                  className="text-[10px] px-2 py-1 bg-[#a855f7]/15 text-[#a855f7] border border-[#a855f7]/30 rounded hover:bg-[#a855f7]/25 transition-colors font-bold"
+                                >
+                                  Gift
+                                </button>
+                                <button
+                                  onClick={() => { setSelectedUser(user); setModalAction('delete_user') }}
+                                  className="text-[10px] px-2 py-1 bg-[#f43f5e]/15 text-[#fb7185] border border-[#f43f5e]/30 rounded hover:bg-[#f43f5e]/25 transition-colors font-bold"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </td>
                         </tr>
                       )
                     })}
