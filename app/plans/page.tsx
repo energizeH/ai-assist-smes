@@ -17,7 +17,7 @@ const plans = [
       'AI Chatbot (up to 1,000 messages/month)',
       'Basic WhatsApp automation',
       'Email support',
-      '1 user account',
+      '3 user accounts',
       'Standard templates',
       'Basic analytics'
     ],
@@ -210,17 +210,26 @@ export default function PlansPage() {
                   )}
                 </div>
 
-                <button
-                  onClick={() => handlePurchase(plan)}
-                  disabled={loading === plan.name}
-                  className={`w-full py-3 px-6 rounded-xl font-semibold transition-all transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed mb-8 ${
-                    plan.highlighted
-                      ? 'btn btn-primary'
-                      : 'btn btn-outline'
-                  }`}
-                >
-                  {loading === plan.name ? 'Redirecting to checkout...' : 'Get Started'}
-                </button>
+                {plan.name === 'Enterprise' ? (
+                  <Link
+                    href="/contact"
+                    className={`block w-full py-3 px-6 rounded-xl font-semibold transition-all transform hover:scale-105 mb-8 text-center btn btn-outline`}
+                  >
+                    Book a Demo
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => handlePurchase(plan)}
+                    disabled={loading === plan.name}
+                    className={`w-full py-3 px-6 rounded-xl font-semibold transition-all transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed mb-8 ${
+                      plan.highlighted
+                        ? 'btn btn-primary'
+                        : 'btn btn-outline'
+                    }`}
+                  >
+                    {loading === plan.name ? 'Redirecting to checkout...' : 'Start Free Trial'}
+                  </button>
+                )}
 
                 <ul className="space-y-3">
                   {plan.features.map((feature, index) => (
@@ -242,7 +251,8 @@ export default function PlansPage() {
                 { q: 'Can I change plans later?', a: 'Yes! You can upgrade or downgrade your plan at any time from your billing settings. Changes take effect immediately.' },
                 { q: 'Is there a free trial?', a: 'We offer a 14-day free trial on all plans. No credit card required to start.' },
                 { q: 'What payment methods do you accept?', a: 'We accept all major credit and debit cards via Stripe. Bank transfers are available for annual enterprise plans.' },
-                { q: 'Can I cancel anytime?', a: 'Yes, you can cancel your subscription at any time with no cancellation fees. Access continues until the end of your billing period.' }
+                { q: 'Can I cancel anytime?', a: 'Yes, you can cancel your subscription at any time with no cancellation fees. Access continues until the end of your billing period.' },
+                { q: 'What happens when my free trial ends?', a: 'After your 14-day trial, you\'ll be asked to choose a plan and enter payment details. You won\'t be charged automatically — we\'ll remind you before your trial ends.' }
               ].map((faq, i) => (
                 <div key={i} className={`glass-card p-6 animate-fadeIn stagger-${i + 1}`}>
                   <h3 className="font-semibold text-[#f1f5f9] mb-2">{faq.q}</h3>
