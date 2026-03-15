@@ -136,8 +136,9 @@ export default function AnalyticsPage() {
 
   const maxSourceCount = Math.max(...Object.values(leadsBySource), 1)
 
-  const conversionRate = stats.totalClients && stats.activeLeads
-    ? Math.round((stats.totalClients / (stats.totalClients + stats.activeLeads)) * 100)
+  const totalLeads = Object.values(leadStatusCounts).reduce((a, b) => a + b, 0)
+  const conversionRate = totalLeads > 0
+    ? Math.round(((leadStatusCounts.closed_won || 0) / totalLeads) * 100)
     : 0
 
   return (

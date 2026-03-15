@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import PasswordStrength, { isPasswordStrongEnough } from '../components/PasswordStrength'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -18,6 +19,12 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!isPasswordStrongEnough(formData.password)) {
+      setStatus('error')
+      setError('Password is not strong enough. Please meet at least 4 of the 5 requirements.')
+      return
+    }
 
     if (!acceptedTerms) {
       setStatus('error')
@@ -102,9 +109,10 @@ export default function RegisterPage() {
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
               <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} required
-                disabled={status === 'loading'} minLength={6}
+                disabled={status === 'loading'} minLength={8}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                placeholder="Min 6 characters" />
+                placeholder="Min 8 characters" />
+              <PasswordStrength password={formData.password} />
             </div>
 
             {/* Terms & Privacy Acceptance */}

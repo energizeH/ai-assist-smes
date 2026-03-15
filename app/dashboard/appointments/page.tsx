@@ -46,11 +46,30 @@ export default function AppointmentsPage() {
 
   useEffect(() => { fetchAppointments() }, [])
 
+  const getMinDate = () => new Date().toISOString().split('T')[0]
+  const getMaxDate = () => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() + 1)
+    return d.toISOString().split('T')[0]
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     setError(null)
     try {
+      // Validate date is not in the past and not more than 1 year ahead
+      const selectedDate = new Date(`${form.appointment_date}T${form.appointment_time}`)
+      const now = new Date()
+      const oneYearFromNow = new Date()
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+
+      if (selectedDate < now && form.status === 'scheduled') {
+        throw new Error('Appointment date and time cannot be in the past')
+      }
+      if (new Date(form.appointment_date) > oneYearFromNow) {
+        throw new Error('Appointment date cannot be more than 1 year in the future')
+      }
       const method = editingAppointment ? 'PUT' : 'POST'
       const url = editingAppointment ? `/api/appointments/${editingAppointment.id}` : '/api/appointments'
       const res = await fetch(url, {
@@ -180,6 +199,7 @@ export default function AppointmentsPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date *</label>
                   <input required type="date" value={form.appointment_date} onChange={e => setForm({...form, appointment_date: e.target.value})}
+                    min={getMinDate()} max={getMaxDate()}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
                 </div>
                 <div>

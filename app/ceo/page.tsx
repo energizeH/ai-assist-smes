@@ -17,6 +17,7 @@ interface CEOData {
   }
   subscriptions: {
     active: number
+    gifted: number
     trialing: number
     pastDue: number
     cancelled: number
@@ -44,6 +45,7 @@ export default function CEOPage() {
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
   const [modalAction, setModalAction] = useState<string | null>(null)
   const [grantPlan, setGrantPlan] = useState('professional')
+  const [giftMonths, setGiftMonths] = useState(1)
   const router = useRouter()
 
   useEffect(() => {
@@ -101,7 +103,7 @@ export default function CEOPage() {
       const res = await fetch('/api/ceo/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, userId, plan }),
+        body: JSON.stringify({ action, userId, plan, giftMonths }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Action failed')
@@ -199,6 +201,7 @@ export default function CEOPage() {
               {modalAction === 'revoke_access' && 'Revoke Access'}
               {modalAction === 'delete_user' && 'Delete User'}
               {modalAction === 'reactivate' && 'Reactivate Subscription'}
+              {modalAction === 'gift_membership' && 'Gift Membership'}
             </h3>
             <p className="text-sm text-gray-400 mb-4">
               User: <span className="text-white font-medium">{selectedUser.full_name || selectedUser.email}</span>
@@ -206,7 +209,7 @@ export default function CEOPage() {
               <span className="text-gray-500">{selectedUser.email}</span>
             </p>
 
-            {(modalAction === 'grant_free_access' || modalAction === 'change_plan') && (
+            {(modalAction === 'grant_free_access' || modalAction === 'change_plan' || modalAction === 'gift_membership') && (
               <div className="mb-4">
                 <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Select Plan</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -221,6 +224,27 @@ export default function CEOPage() {
                       }`}
                     >
                       {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {modalAction === 'gift_membership' && (
+              <div className="mb-4">
+                <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Gift Duration</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 3, 6, 12].map(m => (
+                    <button
+                      key={m}
+                      onClick={() => setGiftMonths(m)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                        giftMonths === m
+                          ? 'bg-pink-600 text-white'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                      }`}
+                    >
+                      {m} {m === 1 ? 'month' : 'months'}
                     </button>
                   ))}
                 </div>
@@ -254,6 +278,8 @@ export default function CEOPage() {
                     ? 'bg-red-600 text-white hover:bg-red-700'
                     : modalAction === 'revoke_access'
                     ? 'bg-yellow-600 text-white hover:bg-yellow-700'
+                    : modalAction === 'gift_membership'
+                    ? 'bg-pink-600 text-white hover:bg-pink-700'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
               >
@@ -538,6 +564,12 @@ export default function CEOPage() {
                                   </>
                                 )}
                                 <button
+                                  onClick={() => { setSelectedUser(u); setModalAction('gift_membership'); setGrantPlan('professional'); setGiftMonths(1) }}
+                                  className="text-[10px] px-2 py-1 bg-pink-600/20 text-pink-400 border border-pink-600/30 rounded hover:bg-pink-600/30 transition-colors font-bold"
+                                >
+                                  Gift
+                                </button>
+                                <button
                                   onClick={() => { setSelectedUser(u); setModalAction('delete_user') }}
                                   className="text-[10px] px-2 py-1 bg-red-600/20 text-red-400 border border-red-600/30 rounded hover:bg-red-600/30 transition-colors font-bold"
                                 >
@@ -615,6 +647,9 @@ export default function CEOPage() {
                               s.status === 'trialing' ? 'bg-blue-500/20 text-blue-400' :
                               'bg-gray-700 text-gray-400'
                             }`}>{s.status}</span>
+                            {s.is_gifted && (
+                              <span className="ml-1 text-[10px] px-1.5 py-0.5 bg-pink-500/20 text-pink-400 border border-pink-500/30 rounded font-bold">GIFTED</span>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-xs text-gray-500">{s.current_period_end ? formatShortDate(s.current_period_end) : '—'}</td>
                           <td className="px-4 py-3 text-xs text-gray-500">{formatShortDate(s.created_at)}</td>
@@ -636,7 +671,7 @@ export default function CEOPage() {
               <div className="bg-gradient-to-br from-green-500/20 to-green-600/5 border border-green-500/30 rounded-xl p-6">
                 <p className="text-xs text-green-300/70 uppercase mb-1">Monthly Recurring Revenue</p>
                 <p className="text-4xl font-bold text-green-400">£{data.overview.mrr}</p>
-                <p className="text-xs text-gray-500 mt-2">From {data.subscriptions.active} active subscriptions</p>
+                <p className="text-xs text-gray-500 mt-2">From {data.subscriptions.active - data.subscriptions.gifted} paying subscriptions{data.subscriptions.gifted > 0 ? ` (${data.subscriptions.gifted} gifted excluded)` : ''}</p>
               </div>
               <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/5 border border-blue-500/30 rounded-xl p-6">
                 <p className="text-xs text-blue-300/70 uppercase mb-1">Annual Run Rate</p>
@@ -732,11 +767,17 @@ export default function CEOPage() {
             <div className="space-y-4">
               {data.recentActivities.map(a => (
                 <div key={a.id} className="flex items-start gap-3 py-3 border-b border-gray-800/50 last:border-0">
-                  <div className="w-8 h-8 bg-blue-500/20 border border-blue-500/30 rounded-full flex items-center justify-center text-xs flex-shrink-0">
-                    {a.type === 'subscription' ? '💳' : a.type === 'lead' ? '🎯' : a.type === 'appointment' ? '📅' : '📌'}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                    a.type === 'signup' ? 'bg-green-500/20 border border-green-500/30' :
+                    a.type === 'subscription' || a.type === 'payment' ? 'bg-blue-500/20 border border-blue-500/30' :
+                    a.type === 'cancellation' ? 'bg-red-500/20 border border-red-500/30' :
+                    a.type === 'contact' ? 'bg-purple-500/20 border border-purple-500/30' :
+                    'bg-gray-500/20 border border-gray-500/30'
+                  }`}>
+                    {a.type === 'signup' ? '👤' : a.type === 'subscription' ? '💳' : a.type === 'payment' ? '💷' : a.type === 'cancellation' ? '❌' : a.type === 'contact' ? '📩' : '📌'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white">{a.title}</p>
+                    <p className="text-sm font-medium text-white">{a.title || a.type}</p>
                     <p className="text-xs text-gray-500">{a.description}</p>
                   </div>
                   <span className="text-xs text-gray-600 whitespace-nowrap">{formatDate(a.created_at)}</span>

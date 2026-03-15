@@ -291,21 +291,28 @@ function DashboardContent() {
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {loading ? (
               <div className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Loading activity...</div>
-            ) : activities.length === 0 ? (
+            ) : activities.filter(a => a.title || a.description).length === 0 ? (
               <div className="px-6 py-8 text-center">
                 <Clock className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
                 <p className="text-gray-500 dark:text-gray-400">No recent activity yet.</p>
                 <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Add clients, leads or appointments to see activity here.</p>
               </div>
             ) : (
-              activities.slice(0, 5).map((activity) => (
+              activities.filter(a => a.title || a.description).slice(0, 5).map((activity) => (
                 <div key={activity.id} className="px-6 py-4 flex items-start gap-4">
                   <div className={`w-8 h-8 ${getActivityIconBg(activity.type)} rounded-full flex items-center justify-center flex-shrink-0`}>
                     {getActivityIcon(activity.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.title}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{activity.description}</p>
+                    {activity.type === 'appointment' && activity.description ? (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        <Calendar className="w-3 h-3 inline-block mr-1 -mt-0.5" />
+                        {activity.description}
+                      </p>
+                    ) : activity.description ? (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{activity.description}</p>
+                    ) : null}
                   </div>
                   <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{formatTimeAgo(activity.created_at)}</span>
                 </div>

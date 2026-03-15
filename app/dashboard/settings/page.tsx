@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '../../components/DashboardLayout'
 import ToggleSwitch from '../../components/ToggleSwitch'
+import PasswordStrength, { isPasswordStrongEnough } from '../../components/PasswordStrength'
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile')
@@ -37,6 +38,13 @@ export default function SettingsPage() {
     zapier_webhook_url: '',
     google_calendar_key: '',
   })
+
+  // Subscription state (for Enterprise detection)
+  const [userPlan, setUserPlan] = useState<string>('')
+
+  // Webhook key state
+  const [webhookKey, setWebhookKey] = useState<string>('')
+  const [regeneratingKey, setRegeneratingKey] = useState(false)
 
   // Data rights state
   const [exportingData, setExportingData] = useState(false)
@@ -95,6 +103,22 @@ export default function SettingsPage() {
             ...(settings.api_keys as Record<string, string>),
           }))
         }
+        // Webhook key
+        if (settings.webhook_key) {
+          setWebhookKey(settings.webhook_key)
+        }
+      }
+
+      // Fetch subscription for plan detection
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('plan')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single()
+
+      if (subscription?.plan) {
+        setUserPlan(subscription.plan)
       }
     } catch (err) {
       console.error('Settings fetch error:', err)
@@ -143,8 +167,8 @@ export default function SettingsPage() {
       showMessage('error', 'Passwords do not match')
       return
     }
-    if (passwords.new_password.length < 8) {
-      showMessage('error', 'Password must be at least 8 characters')
+    if (!isPasswordStrongEnough(passwords.new_password)) {
+      showMessage('error', 'Password is not strong enough. Please meet at least 4 of the 5 requirements.')
       return
     }
     setSaving(true)
@@ -197,6 +221,34 @@ export default function SettingsPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const generateWebhookKey = async (regenerate = false) => {
+    if (regenerate && !confirm('Are you sure you want to regenerate your webhook key? Existing integrations using the old key will stop working.')) {
+      return
+    }
+    setRegeneratingKey(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const newKey = crypto.randomUUID()
+      await supabase.from('user_settings').upsert({
+        user_id: user.id,
+        webhook_key: newKey,
+      }, { onConflict: 'user_id' })
+      setWebhookKey(newKey)
+      showMessage('success', regenerate ? 'Webhook key regenerated' : 'Webhook key generated')
+    } catch (err: any) {
+      showMessage('error', err.message || 'Failed to generate webhook key')
+    } finally {
+      setRegeneratingKey(false)
+    }
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    showMessage('success', 'Copied to clipboard')
   }
 
   const handleExportData = async () => {
@@ -255,6 +307,7 @@ export default function SettingsPage() {
     { id: 'password', label: 'Password', icon: '🔒' },
     { id: 'notifications', label: 'Notifications', icon: '🔔' },
     { id: 'integrations', label: 'Integrations', icon: '🔗' },
+    ...(userPlan === 'enterprise' ? [{ id: 'email_templates', label: 'Email Templates', icon: '✉️' }] : []),
     { id: 'data', label: 'My Data', icon: '🛡️' },
   ]
 
@@ -335,6 +388,7 @@ export default function SettingsPage() {
                     <input type="password" required minLength={8} value={passwords.new_password}
                       onChange={e => setPasswords({...passwords, new_password: e.target.value})} className={inputClass}
                       placeholder="Min 8 characters" />
+                    <PasswordStrength password={passwords.new_password} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
@@ -390,6 +444,56 @@ export default function SettingsPage() {
             {/* Integrations */}
             {activeTab === 'integrations' && (
               <div className="space-y-6">
+                {/* Lead Webhook URL */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Lead Webhook URL</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Receive leads from external systems via this unique webhook endpoint.
+                  </p>
+
+                  {webhookKey ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={`https://aiassistsmes.co.uk/api/leads/webhook?key=${webhookKey}`}
+                          className={`${inputClass} font-mono text-xs`}
+                        />
+                        <button
+                          onClick={() => copyToClipboard(`https://aiassistsmes.co.uk/api/leads/webhook?key=${webhookKey}`)}
+                          className="flex-shrink-0 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg text-sm transition-colors"
+                          title="Copy URL"
+                        >
+                          📋
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => generateWebhookKey(true)}
+                        disabled={regeneratingKey}
+                        className="text-sm text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
+                      >
+                        {regeneratingKey ? 'Regenerating...' : 'Regenerate Key'}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => generateWebhookKey(false)}
+                      disabled={regeneratingKey}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                    >
+                      {regeneratingKey ? 'Generating...' : 'Generate Webhook Key'}
+                    </button>
+                  )}
+
+                  <div className="mt-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Usage:</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Send POST requests with JSON body containing: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">name</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">email</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">phone</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">company</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">notes</code>
+                    </p>
+                  </div>
+                </div>
+
                 <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">API Integrations</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Connect your external services to enable automations</p>
@@ -428,6 +532,35 @@ export default function SettingsPage() {
                   <p className="text-sm text-blue-700 dark:text-blue-400">
                     <strong>Security:</strong> API keys are stored securely and encrypted. They are only used to connect your external services.
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* Email Templates (Enterprise only) */}
+            {activeTab === 'email_templates' && (
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-purple-200 dark:border-purple-700 p-8">
+                <div className="text-center">
+                  <div className="text-5xl mb-4">✉️</div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Custom Email Templates</h2>
+                  <span className="inline-block bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs font-semibold px-3 py-1 rounded-full mb-4">
+                    Enterprise Feature — Coming Soon
+                  </span>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                    You&apos;ll soon be able to design and customise your own email templates for:
+                  </p>
+                  <ul className="text-left max-w-xs mx-auto space-y-2 mb-8">
+                    {['Welcome emails', 'Appointment confirmations', 'Follow-up sequences', 'Invoice notifications'].map(item => (
+                      <li key={item} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                        <span className="w-1.5 h-1.5 bg-purple-500 rounded-full flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-4 max-w-sm mx-auto">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      We&apos;re building this feature now. You&apos;ll be notified when it&apos;s ready.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}

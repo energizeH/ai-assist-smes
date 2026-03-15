@@ -10,6 +10,7 @@ const plans = [
     name: 'Starter',
     price: '£49',
     annualPrice: '£39',
+    annualSaving: '£120',
     period: '/month',
     description: 'Perfect for small businesses getting started with AI automation',
     features: [
@@ -27,6 +28,7 @@ const plans = [
     name: 'Professional',
     price: '£149',
     annualPrice: '£119',
+    annualSaving: '£360',
     period: '/month',
     description: 'Ideal for growing businesses seeking advanced automation',
     features: [
@@ -46,6 +48,7 @@ const plans = [
     name: 'Enterprise',
     price: '£299',
     annualPrice: '£239',
+    annualSaving: '£720',
     period: '/month',
     description: 'For established businesses requiring complete automation solutions',
     features: [
@@ -182,14 +185,19 @@ export default function PlansPage() {
               <p className={`text-sm mb-6 ${plan.highlighted ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>{plan.description}</p>
 
               <div className="mb-6">
-                <span className="text-4xl font-extrabold">
-                  {billingPeriod === 'annual' ? plan.annualPrice : plan.price}
-                </span>
-                <span className={`text-sm ${plan.highlighted ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>{plan.period}</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-extrabold">
+                    {billingPeriod === 'annual' ? plan.annualPrice : plan.price}
+                  </span>
+                  <span className={`text-sm ${plan.highlighted ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>{plan.period}</span>
+                </div>
                 {billingPeriod === 'annual' && (
-                  <p className={`text-xs mt-1 ${plan.highlighted ? 'text-blue-200' : 'text-gray-400'}`}>
-                    Billed annually — save 20%
-                  </p>
+                  <div className="mt-2">
+                    <span className={`line-through text-sm mr-2 ${plan.highlighted ? 'text-blue-200' : 'text-gray-400'}`}>{plan.price}/month</span>
+                    <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${plan.highlighted ? 'bg-white/20 text-white' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'}`}>
+                      Save {plan.annualSaving}/year
+                    </span>
+                  </div>
                 )}
               </div>
 

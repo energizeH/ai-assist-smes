@@ -137,13 +137,19 @@ export default function AutomationsPage() {
     setShowForm(true)
   }
 
+  const generateActionDescription = (type: string, trigger: string) => {
+    const typeLabel = automationTypes.find(t => t.id === type)?.label || type
+    const triggerLabel = triggerEvents.find(t => t.id === trigger)?.label || trigger
+    return `Send ${typeLabel.toLowerCase()} notification when ${triggerLabel.toLowerCase()}`
+  }
+
   const resetForm = () => {
-    setForm({ name: '', type: 'email', trigger_event: 'new_lead', action_description: '', is_active: true })
+    setForm({ name: '', type: 'email', trigger_event: 'new_lead', action_description: generateActionDescription('email', 'new_lead'), is_active: true })
   }
 
   const openAddForm = () => {
     setEditingAutomation(null)
-    resetForm()
+    setForm({ name: '', type: 'email', trigger_event: 'new_lead', action_description: generateActionDescription('email', 'new_lead'), is_active: true })
     setShowForm(true)
   }
 
@@ -192,24 +198,28 @@ export default function AutomationsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                  <select value={form.type} onChange={e => setForm({...form, type: e.target.value})}
+                  <select value={form.type} onChange={e => {
+                    const newType = e.target.value
+                    setForm({...form, type: newType, action_description: generateActionDescription(newType, form.trigger_event)})
+                  }}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     {automationTypes.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trigger</label>
-                  <select value={form.trigger_event} onChange={e => setForm({...form, trigger_event: e.target.value})}
+                  <select value={form.trigger_event} onChange={e => {
+                    const newTrigger = e.target.value
+                    setForm({...form, trigger_event: newTrigger, action_description: generateActionDescription(form.type, newTrigger)})
+                  }}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                     {triggerEvents.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Action Description *</label>
-                <textarea required value={form.action_description} onChange={e => setForm({...form, action_description: e.target.value})} rows={3}
-                  placeholder="Describe what this automation does..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+              <div className="bg-gray-50 dark:bg-gray-900/30 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-700">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Auto-generated action</p>
+                <p className="text-sm text-gray-900 dark:text-white">{form.action_description}</p>
               </div>
               <ToggleSwitch
                 enabled={form.is_active}

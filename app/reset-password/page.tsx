@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import PasswordStrength, { isPasswordStrongEnough } from '../components/PasswordStrength'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -21,9 +22,9 @@ export default function ResetPasswordPage() {
       return
     }
 
-    if (password.length < 6) {
+    if (!isPasswordStrongEnough(password)) {
       setStatus('error')
-      setMessage('Password must be at least 6 characters.')
+      setMessage('Password is not strong enough. Please meet at least 4 of the 5 requirements.')
       return
     }
 
@@ -92,10 +93,11 @@ export default function ResetPasswordPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800"
-                  placeholder="Minimum 6 characters"
-                  minLength={6}
+                  placeholder="Minimum 8 characters"
+                  minLength={8}
                   disabled={status === 'loading'}
                 />
+                <PasswordStrength password={password} />
               </div>
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -109,7 +111,7 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800"
                   placeholder="Repeat your new password"
-                  minLength={6}
+                  minLength={8}
                   disabled={status === 'loading'}
                 />
               </div>

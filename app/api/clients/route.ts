@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, email, phone, company, status, notes } = body
 
-    if (!name || !email) {
-      return NextResponse.json({ error: 'Name and email are required' }, { status: 400 })
+    if (!name) {
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
     const { data, error } = await supabase
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       .insert([{
         user_id: session.user.id,
         name,
-        email,
+        email: email || null,
         phone: phone || null,
         company: company || null,
         status: status || 'active',
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       user_id: session.user.id,
       type: 'client',
       title: `New client: ${name}`,
-      description: `${name} (${email}) was added as a client`,
+      description: `${name}${email ? ` (${email})` : ''} was added as a client`,
     }])
 
     return NextResponse.json({ client: data }, { status: 201 })

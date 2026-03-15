@@ -1,27 +1,16 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '../../lib/rate-limit'
 
-// Fetch knowledge base entries for the chatbot
-async function getKnowledgeBase(userId?: string): Promise<string> {
-  try {
-    if (!userId) return ''
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    const { data } = await supabase
-      .from('knowledge_base')
-      .select('category, title, content')
-      .eq('user_id', userId)
-    
-    if (!data || data.length === 0) return ''
-    
-    return data.map(entry => `[${entry.category}] ${entry.title}: ${entry.content}`).join('\n')
-  } catch {
-    return ''
-  }
-}
+const SYSTEM_PROMPT = `You are a helpful AI assistant for AI-Assist for SMEs, a Birmingham-based AI automation company. Help visitors understand our services, pricing, and how we can help their SME. Be friendly, professional, and concise. Always encourage visitors to book a free consultation at /contact.
+
+Key business info:
+- Services: AI Receptionist Systems, WhatsApp Automation, Lead Management, Email Automation, Appointment Scheduling, Custom API Integrations
+- Plans: Starter £49/month, Professional £149/month, Enterprise £299/month
+- Opening Hours: Mon-Fri, 9am - 6pm GMT
+- Contact email: info@aiassistsmes.co.uk
+- Phone: +44 121 000 0000
+- Location: Birmingham, United Kingdom
+- Website: https://aiassistsmes.co.uk`
 
 function getRuleBasedResponse(msg: string): string | null {
   const lower = msg.toLowerCase()
@@ -36,19 +25,13 @@ function getRuleBasedResponse(msg: string): string | null {
     return 'We are available Mon-Fri, 9am to 6pm GMT. Outside those hours, our AI handles enquiries automatically. Would you like to book a consultation during business hours?'
   }
   if (lower.includes('appointment') || lower.includes('book') || lower.includes('schedule') || lower.includes('consult') || lower.includes('meeting')) {
-    return "I'd love to help you book a consultation. Please share your preferred date/time and your name and email, and our team will confirm within 24 hours. Or visit our Contact page directly."
-  }
-  if (lower.includes('whatsapp') || lower.includes('automation')) {
-    return 'Our WhatsApp Automation lets your business respond to customer enquiries 24/7 automatically. It handles bookings, FAQs, and lead capture. Would you like a demo?'
-  }
-  if (lower.includes('lead') || lower.includes('crm') || lower.includes('customer')) {
-    return 'Our Lead Management system captures, qualifies, and nurtures leads automatically. It integrates with your existing tools and notifies you instantly when a hot lead comes in.'
+    return "I'd love to help you book a consultation. Please visit our Contact page at /contact or share your preferred date/time and we'll confirm within 24 hours."
   }
   if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey') || lower.includes('good morning') || lower.includes('good afternoon')) {
-    return "Hello! Welcome to AI-Assist for SMEs. I'm your AI Receptionist. I can help with information about our services, pricing, or booking a consultation. How can I help you today?"
+    return "Hello! Welcome to AI-Assist for SMEs. I'm here to help with information about our services, pricing, or booking a consultation. How can I help you today?"
   }
   if (lower.includes('contact') || lower.includes('email') || lower.includes('phone') || lower.includes('reach')) {
-    return 'You can reach us at hello@ai-assist-smes.com or through our Contact page. We typically respond within 2 hours during business hours (Mon-Fri, 9am-6pm GMT). You can also request a callback through the contact form.'
+    return 'You can reach us at info@aiassistsmes.co.uk, call +44 121 000 0000, or visit our Contact page. We typically respond within 2 hours during business hours (Mon-Fri, 9am-6pm GMT).'
   }
   if (lower.includes('thank') || lower.includes('thanks') || lower.includes('great') || lower.includes('perfect')) {
     return "You're welcome! Is there anything else I can help you with?"
@@ -58,79 +41,62 @@ function getRuleBasedResponse(msg: string): string | null {
 
 export async function POST(req: Request) {
   try {
-    // Rate limit check
     const ip = getClientIP(req)
     const limit = checkRateLimit(`chat:${ip}`, RATE_LIMITS.chat)
     if (!limit.success) {
       return NextResponse.json({ text: 'You\'re sending messages too quickly. Please wait a moment.' })
     }
 
-    const { messages, userId } = await req.json()
+    const { messages } = await req.json()
     const lastMessage = messages[messages.length - 1]?.text || ''
 
-    const apiKey = process.env.OPENAI_API_KEY
+    const apiKey = process.env.ANTHROPIC_API_KEY
 
-    // Try rule-based first if no OpenAI key
+    // Use rule-based responses if no API key
     if (!apiKey) {
       const ruleResponse = getRuleBasedResponse(lastMessage)
-      const botText = ruleResponse || "Thank you for your message. Please email us at hello@ai-assist-smes.com or book a free consultation through our Plans page. We respond within 2 hours during business hours."
+      const botText = ruleResponse || "Thank you for your message. Please email us at info@aiassistsmes.co.uk or book a free consultation through our Contact page. We respond within 2 hours during business hours."
       return NextResponse.json({ text: botText })
     }
 
-    // Get knowledge base for context
-    const knowledgeBase = await getKnowledgeBase(userId)
+    // Try rule-based first for common queries (saves API calls)
+    const ruleResponse = getRuleBasedResponse(lastMessage)
+    if (ruleResponse) {
+      return NextResponse.json({ text: ruleResponse })
+    }
 
-    const systemPrompt = `You are a professional AI Receptionist for 'AI-Assist for SMEs', a leading AI automation consultancy for small and medium businesses in the UK.
-
-Business Info:
-- Services: AI Receptionist Systems, WhatsApp Automation, Lead Management, Email Automation, Appointment Scheduling, Custom API Integrations
-- Plans: Starter £49/month, Professional £149/month, Enterprise £299/month
-- Opening Hours: Mon-Fri, 9am - 6pm GMT
-- Contact: hello@ai-assist-smes.com
-
-${knowledgeBase ? `\nCustom Knowledge Base:\n${knowledgeBase}\n` : ''}
-
-Your role:
-1. Answer questions about the business, services, and pricing
-2. Capture leads by asking for name, email, and business needs
-3. Help schedule appointments by asking for preferred date/time
-4. Be professional, friendly, and concise
-5. Always end with a helpful call-to-action`
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Anthropic Claude API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages.map((m: { sender: string; text: string }) => ({
-            role: m.sender === 'user' ? 'user' : 'assistant',
-            content: m.text,
-          })),
-        ],
-        temperature: 0.7,
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 500,
+        system: SYSTEM_PROMPT,
+        messages: messages.map((m: { sender: string; text: string }) => ({
+          role: m.sender === 'user' ? 'user' : 'assistant',
+          content: m.text,
+        })),
       }),
     })
 
     if (!response.ok) {
-      const ruleResponse = getRuleBasedResponse(lastMessage)
-      const botText = ruleResponse || "I'm having trouble connecting right now. Please email hello@ai-assist-smes.com for immediate assistance."
-      return NextResponse.json({ text: botText })
+      const fallback = "Thank you for your message. Please email us at info@aiassistsmes.co.uk or book a free consultation through our Contact page."
+      return NextResponse.json({ text: fallback })
     }
 
     const data = await response.json()
-    const botText = data.choices[0].message.content
+    const botText = data.content?.[0]?.text || "Thank you for your message. How can I help you today?"
     return NextResponse.json({ text: botText })
   } catch (error) {
     console.error('Chat API Error:', error)
     return NextResponse.json(
-      { text: "I'm having trouble connecting right now. Please email hello@ai-assist-smes.com for immediate assistance." },
-      { status: 200 } // Return 200 so the chatbot UI doesn't break
+      { text: "I'm having trouble connecting right now. Please email info@aiassistsmes.co.uk for immediate assistance." },
+      { status: 200 }
     )
   }
 }

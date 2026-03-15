@@ -30,11 +30,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { name, email, phone, company, status, notes } = body
+    const { name, email, phone, company, status, notes, photo_url } = body
+
+    const updateData: any = { name, email, phone, company, status, notes }
+    if (photo_url !== undefined) updateData.photo_url = photo_url
 
     const { data, error } = await supabase
       .from('clients')
-      .update({ name, email, phone, company, status, notes })
+      .update(updateData)
       .eq('id', params.id)
       .eq('user_id', session.user.id)
       .select()

@@ -210,6 +210,42 @@ export async function sendPaymentFailedEmail(to: string, name: string) {
   });
 }
 
+export async function sendAppointmentReminderEmail(to: string, clientName: string, data: {
+  appointment_date: string;
+  appointment_time: string;
+  service?: string;
+  duration?: number;
+  businessName?: string;
+}) {
+  const dateFormatted = new Date(data.appointment_date).toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+  const html = baseTemplate(`
+    <h2>Appointment Reminder</h2>
+    <p>Hi ${clientName},</p>
+    <p>This is a friendly reminder about your upcoming appointment.</p>
+    <div class="info-box">
+      <p><strong>Date:</strong> ${dateFormatted}</p>
+      <p><strong>Time:</strong> ${data.appointment_time}</p>
+      ${data.service ? `<p><strong>Service:</strong> ${data.service}</p>` : ''}
+      ${data.duration ? `<p><strong>Duration:</strong> ${data.duration} minutes</p>` : ''}
+      ${data.businessName ? `<p><strong>With:</strong> ${data.businessName}</p>` : ''}
+    </div>
+    <p>If you need to reschedule or cancel, please get in touch as soon as possible.</p>
+    <p style="text-align:center;">
+      <a href="https://aiassistsmes.co.uk/dashboard/appointments" class="btn">View Appointments</a>
+    </p>
+    <p>Best regards,<br><strong>The AI-Assist Team</strong></p>
+  `);
+
+  return getResend().emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `Appointment Reminder — ${dateFormatted} at ${data.appointment_time}`,
+    html,
+  });
+}
+
 export async function sendSubscriptionCancelledEmail(to: string, name: string, endDate: string) {
   const html = baseTemplate(`
     <h2>Subscription Cancelled</h2>

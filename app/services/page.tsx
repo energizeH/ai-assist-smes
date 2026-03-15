@@ -22,7 +22,7 @@ const services = [
     color: 'from-blue-500 to-blue-600',
   },
   {
-    id: 'workflow',
+    id: 'workflow-automation',
     icon: '⚙️',
     title: 'Workflow Automation',
     tagline: 'Eliminate Repetitive Manual Tasks',
@@ -34,7 +34,7 @@ const services = [
     color: 'from-green-500 to-green-600',
   },
   {
-    id: 'email-ai',
+    id: 'ai-email',
     icon: '📧',
     title: 'AI Email Systems',
     tagline: 'Intelligent Lead Management',
@@ -121,7 +121,7 @@ export default function ServicesPage() {
         <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-10">
             {services.map((service) => (
-              <div key={service.id} className="card hover:shadow-xl transition-all duration-300">
+              <div key={service.id} id={service.id} className="card hover:shadow-xl transition-all duration-300 scroll-mt-24">
                 <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${service.color} flex items-center justify-center text-3xl mb-6`}>
                   {service.icon}
                 </div>

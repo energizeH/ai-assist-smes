@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { action, userId, plan, status } = body
+    const { action, userId, plan, status, giftMonths } = body
 
     if (!userId || !action) {
       return NextResponse.json({ error: 'Missing userId or action' }, { status: 400 })
@@ -127,6 +127,55 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true, message: 'Subscription reactivated' })
+      }
+
+      case 'gift_membership': {
+        const giftPlan = plan || 'professional'
+        const months = giftMonths || 1
+        const periodEnd = new Date()
+        periodEnd.setMonth(periodEnd.getMonth() + months)
+
+        const CEO_USER_ID = '495e99f7-3aad-498b-a611-86978134d3d4'
+
+        // Check if subscription exists
+        const { data: existingGift } = await admin
+          .from('subscriptions')
+          .select('id')
+          .eq('user_id', userId)
+          .single()
+
+        if (existingGift) {
+          await admin
+            .from('subscriptions')
+            .update({
+              plan: giftPlan,
+              status: 'active',
+              is_gifted: true,
+              gifted_by: CEO_USER_ID,
+              gift_months: months,
+              current_period_start: new Date().toISOString(),
+              current_period_end: periodEnd.toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', userId)
+        } else {
+          await admin
+            .from('subscriptions')
+            .insert({
+              user_id: userId,
+              plan: giftPlan,
+              status: 'active',
+              is_gifted: true,
+              gifted_by: CEO_USER_ID,
+              gift_months: months,
+              current_period_start: new Date().toISOString(),
+              current_period_end: periodEnd.toISOString(),
+              stripe_customer_id: null,
+              stripe_subscription_id: null,
+            })
+        }
+
+        return NextResponse.json({ success: true, message: `Gifted ${giftPlan} plan for ${months} month${months !== 1 ? 's' : ''}` })
       }
 
       case 'delete_user': {

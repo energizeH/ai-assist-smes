@@ -56,6 +56,28 @@ export async function POST(request: Request) {
         message: safeMessage,
         status: 'new',
       }])
+
+      // Auto-create lead for CEO user
+      const CEO_USER_ID = '495e99f7-3aad-498b-a611-86978134d3d4'
+      await supabase.from('leads').insert([{
+        user_id: CEO_USER_ID,
+        name: safeName,
+        email: email,
+        phone: phone || null,
+        company: company || null,
+        status: 'new',
+        source: 'website',
+        value: 0,
+        notes: `Website enquiry: ${safeSubject} — ${safeMessage}`,
+      }])
+
+      // Log activity for CEO user
+      await supabase.from('activities').insert([{
+        user_id: CEO_USER_ID,
+        type: 'lead',
+        title: 'New website enquiry',
+        description: `Lead from website contact form: ${safeName}`,
+      }])
     } catch (dbErr) {
       console.error('DB save error (non-blocking):', dbErr)
     }

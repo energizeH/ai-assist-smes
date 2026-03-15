@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
       admin.from('appointments').select('*', { count: 'exact', head: true }),
       admin.from('subscriptions').select('*').order('created_at', { ascending: false }),
       admin.from('contact_submissions').select('*').order('created_at', { ascending: false }).limit(20),
-      admin.from('activities').select('*').order('created_at', { ascending: false }).limit(30),
+      admin.from('activities').select('*').in('type', ['signup', 'subscription', 'contact', 'payment', 'cancellation', 'platform', 'admin']).order('created_at', { ascending: false }).limit(30),
     ])
 
     // Subscription stats
@@ -58,13 +58,17 @@ export async function GET(req: NextRequest) {
     const pastDueSubscriptions = allSubscriptions?.filter(s => s.status === 'past_due') || []
     const cancelledSubscriptions = allSubscriptions?.filter(s => s.status === 'cancelled') || []
 
+    // Exclude gifted/complimentary subscriptions from revenue calculations
+    const paidSubscriptions = activeSubscriptions.filter(s => !s.is_gifted)
+    const giftedSubscriptions = activeSubscriptions.filter(s => s.is_gifted)
+
     const planBreakdown = {
-      starter: activeSubscriptions.filter(s => s.plan === 'starter').length,
-      professional: activeSubscriptions.filter(s => s.plan === 'professional').length,
-      enterprise: activeSubscriptions.filter(s => s.plan === 'enterprise').length,
+      starter: paidSubscriptions.filter(s => s.plan === 'starter').length,
+      professional: paidSubscriptions.filter(s => s.plan === 'professional').length,
+      enterprise: paidSubscriptions.filter(s => s.plan === 'enterprise').length,
     }
 
-    // Monthly recurring revenue estimate
+    // Monthly recurring revenue estimate (excludes gifted plans)
     const mrr = (planBreakdown.starter * 49) + (planBreakdown.professional * 149) + (planBreakdown.enterprise * 299)
 
     // Stripe revenue data (if available)
@@ -119,6 +123,7 @@ export async function GET(req: NextRequest) {
       },
       subscriptions: {
         active: activeSubscriptions.length,
+        gifted: giftedSubscriptions.length,
         trialing: trialSubscriptions.length,
         pastDue: pastDueSubscriptions.length,
         cancelled: cancelledSubscriptions.length,

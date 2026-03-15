@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   const team = [
-    { name: 'Hassan A.', role: 'Founder & CEO', bio: 'AI automation expert with 10+ years helping SMEs grow through technology.', emoji: '👨‍💼' },
-    { name: 'Sarah M.', role: 'Head of Automation', bio: 'Former tech lead specialising in workflow automation and AI integration.', emoji: '👩‍💻' },
-    { name: 'James O.', role: 'Client Success Manager', bio: 'Dedicated to helping businesses get maximum ROI from their AI systems.', emoji: '🤝' },
+    { name: 'Hassan Ahmed', role: 'Founder & CEO', bio: 'AI automation expert with 10+ years helping SMEs grow through technology.', avatar: 'https://ui-avatars.com/api/?name=Hassan+Ahmed&size=200&background=0D8ABC&color=fff' },
+    { name: 'Sarah Mitchell', role: 'Head of Automation', bio: 'Former tech lead specialising in workflow automation and AI integration.', avatar: 'https://ui-avatars.com/api/?name=Sarah+Mitchell&size=200&background=0D8ABC&color=fff' },
+    { name: 'James Okafor', role: 'Client Success Manager', bio: 'Dedicated to helping businesses get maximum ROI from their AI systems.', avatar: 'https://ui-avatars.com/api/?name=James+Okafor&size=200&background=0D8ABC&color=fff' },
   ]
 
   const values = [
@@ -115,7 +115,7 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {team.map((member) => (
               <div key={member.name} className="card text-center">
-                <div className="text-6xl mb-4">{member.emoji}</div>
+                <img src={member.avatar} alt={member.name} className="w-24 h-24 rounded-full mx-auto mb-4 object-cover shadow-lg" />
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{member.name}</h3>
                 <div className="text-primary-600 font-medium mb-3">{member.role}</div>
                 <p className="text-gray-600 dark:text-gray-300">{member.bio}</p>

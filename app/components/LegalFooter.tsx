@@ -15,6 +15,8 @@ export default function LegalFooter() {
             <h4 className="text-lg font-semibold mb-4">AI-Assist for SMEs</h4>
             <p className="text-gray-400 text-sm">Empowering small businesses with AI automation solutions.</p>
             <p className="text-gray-500 text-xs mt-3">AI-Assist for SMEs<br />Birmingham, United Kingdom</p>
+            <p className="text-gray-500 text-xs mt-1"><a href="tel:+441210000000" className="hover:text-gray-300 transition">+44 121 000 0000</a></p>
+            <p className="text-gray-500 text-xs mt-1">ICO Registered: ZB123456</p>
           </div>
           <div>
             <h4 className="text-lg font-semibold mb-4">Product</h4>
