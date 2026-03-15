@@ -13,17 +13,20 @@ function getStripe() {
   })
 }
 
-const PLANS: Record<string, { priceId: string; name: string }> = {
+const PLANS: Record<string, { monthlyPriceId: string; annualPriceId: string; name: string }> = {
   starter: {
-    priceId: process.env.STRIPE_PRICE_STARTER!,
+    monthlyPriceId: process.env.STRIPE_PRICE_STARTER!,
+    annualPriceId: process.env.STRIPE_PRICE_STARTER_ANNUAL || 'price_1TBIEA06371vBUccMFfRGpSv',
     name: 'Starter',
   },
   professional: {
-    priceId: process.env.STRIPE_PRICE_PRO!,
+    monthlyPriceId: process.env.STRIPE_PRICE_PRO!,
+    annualPriceId: process.env.STRIPE_PRICE_PRO_ANNUAL || 'price_1TBIEF06371vBUccGZGORmnV',
     name: 'Professional',
   },
   enterprise: {
-    priceId: process.env.STRIPE_PRICE_ENTERPRISE!,
+    monthlyPriceId: process.env.STRIPE_PRICE_ENTERPRISE!,
+    annualPriceId: process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL || 'price_1TBIEL06371vBUcct3TnngMS',
     name: 'Enterprise',
   },
 }
@@ -39,6 +42,7 @@ export async function POST(req: NextRequest) {
     let userEmail = body.userEmail
 
     // If coming from the plans page (planName + billingPeriod)
+    const billingPeriod = body.billingPeriod || 'monthly'
     if (body.planName) {
       planId = body.planName.toLowerCase()
     }
@@ -74,7 +78,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (!plan.priceId) {
+    const priceId = billingPeriod === 'annual' ? plan.annualPriceId : plan.monthlyPriceId
+    if (!priceId) {
       return NextResponse.json(
         { error: 'This plan is not yet available for purchase. Please contact support.' },
         { status: 500 }
@@ -108,7 +113,7 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
-      line_items: [{ price: plan.priceId, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
       success_url: `${appUrl}/dashboard?subscription=success&plan=${planId}`,
       cancel_url: `${appUrl}/plans?cancelled=true`,
@@ -117,11 +122,13 @@ export async function POST(req: NextRequest) {
       metadata: {
         user_id: userId,
         plan_id: planId,
+        billing_period: billingPeriod,
       },
       subscription_data: {
         metadata: {
           user_id: userId,
           plan_id: planId,
+          billing_period: billingPeriod,
         },
       },
     })
