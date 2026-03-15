@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         // Create or update subscription to active with chosen plan, no Stripe
         const planName = plan || 'professional'
         const periodEnd = new Date()
-        periodEnd.setFullYear(periodEnd.getFullYear() + 10) // 10 years = effectively permanent
+        periodEnd.setMonth(periodEnd.getMonth() + 1) // 1 month billing period
 
         // Check if subscription exists
         const { data: existing } = await admin

@@ -130,11 +130,11 @@ export default function AppointmentsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-      case 'completed': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-      case 'cancelled': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-      case 'no_show': return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-      default: return 'bg-gray-100 text-gray-600'
+      case 'scheduled': return 'badge-info'
+      case 'completed': return 'badge-success'
+      case 'cancelled': return 'badge-danger'
+      case 'no_show': return 'bg-white/10 text-[#94a3b8]'
+      default: return 'bg-white/10 text-[#94a3b8]'
     }
   }
 
@@ -143,76 +143,76 @@ export default function AppointmentsPage() {
 
   return (
     <DashboardLayout title="Appointments" subtitle="Schedule and manage your appointments">
-      {error && <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">{error}</div>}
-      {success && <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">{success}</div>}
+      {error && <div className="mb-4 bg-[#f43f5e]/10 border border-[#f43f5e]/20 text-[#fb7185] px-4 py-3 rounded-lg">{error}</div>}
+      {success && <div className="mb-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg">{success}</div>}
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Today</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{today.length}</p>
+        <div className="kpi-card">
+          <p className="text-sm font-medium text-[#94a3b8] mb-1">Today</p>
+          <p className="text-2xl font-bold text-[#f1f5f9]">{today.length}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Upcoming</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{upcoming.length}</p>
+        <div className="kpi-card">
+          <p className="text-sm font-medium text-[#94a3b8] mb-1">Upcoming</p>
+          <p className="text-2xl font-bold text-[#f1f5f9]">{upcoming.length}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{appointments.length}</p>
+        <div className="kpi-card">
+          <p className="text-sm font-medium text-[#94a3b8] mb-1">Total</p>
+          <p className="text-2xl font-bold text-[#f1f5f9]">{appointments.length}</p>
         </div>
       </div>
 
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex gap-2">
-          <button onClick={() => setView('list')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${view === 'list' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+          <button onClick={() => setView('list')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${view === 'list' ? 'glass-tab-active' : 'glass-tab'}`}>
             List
           </button>
-          <button onClick={() => setView('calendar')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${view === 'calendar' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+          <button onClick={() => setView('calendar')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${view === 'calendar' ? 'glass-tab-active' : 'glass-tab'}`}>
             Calendar
           </button>
         </div>
-        <button onClick={openAddForm} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button onClick={openAddForm} className="btn btn-primary">
           + New Appointment
         </button>
       </div>
 
       {/* Modal Form */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{editingAppointment ? 'Edit Appointment' : 'New Appointment'}</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
+          <div className="glass-card-strong p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-[#f1f5f9] mb-6">{editingAppointment ? 'Edit Appointment' : 'New Appointment'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Name *</label>
+                  <label className="block text-sm font-medium text-[#94a3b8] mb-1">Client Name *</label>
                   <input required value={form.client_name} onChange={e => setForm({...form, client_name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                    className="input w-full text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Email</label>
+                  <label className="block text-sm font-medium text-[#94a3b8] mb-1">Client Email</label>
                   <input type="email" value={form.client_email} onChange={e => setForm({...form, client_email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                    className="input w-full text-sm" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date *</label>
+                  <label className="block text-sm font-medium text-[#94a3b8] mb-1">Date *</label>
                   <input required type="date" value={form.appointment_date} onChange={e => setForm({...form, appointment_date: e.target.value})}
                     min={getMinDate()} max={getMaxDate()}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                    className="input w-full text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time *</label>
+                  <label className="block text-sm font-medium text-[#94a3b8] mb-1">Time *</label>
                   <input required type="time" value={form.appointment_time} onChange={e => setForm({...form, appointment_time: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                    className="input w-full text-sm" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service</label>
+                  <label className="block text-sm font-medium text-[#94a3b8] mb-1">Service</label>
                   <select value={form.service} onChange={e => setForm({...form, service: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    className="input w-full text-sm">
                     <option value="">Select service</option>
                     <option value="consultation">Consultation</option>
                     <option value="demo">Product Demo</option>
@@ -222,9 +222,9 @@ export default function AppointmentsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (mins)</label>
+                  <label className="block text-sm font-medium text-[#94a3b8] mb-1">Duration (mins)</label>
                   <select value={form.duration} onChange={e => setForm({...form, duration: parseInt(e.target.value)})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    className="input w-full text-sm">
                     <option value={15}>15 minutes</option>
                     <option value={30}>30 minutes</option>
                     <option value={45}>45 minutes</option>
@@ -235,9 +235,9 @@ export default function AppointmentsPage() {
               </div>
               {editingAppointment && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-[#94a3b8] mb-1">Status</label>
                   <select value={form.status} onChange={e => setForm({...form, status: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    className="input w-full text-sm">
                     <option value="scheduled">Scheduled</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
@@ -246,15 +246,15 @@ export default function AppointmentsPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Notes</label>
                 <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                  className="input w-full text-sm" />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
+                <button type="submit" disabled={saving} className="flex-1 btn btn-primary py-2 disabled:opacity-50">
                   {saving ? 'Saving...' : (editingAppointment ? 'Update' : 'Create Appointment')}
                 </button>
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-white py-2 rounded-lg font-medium transition-colors">Cancel</button>
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-[#f1f5f9] py-2 rounded-lg font-medium transition-colors">Cancel</button>
               </div>
             </form>
           </div>
@@ -263,45 +263,45 @@ export default function AppointmentsPage() {
 
       {/* Appointments List */}
       {loading ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading appointments...</div>
+        <div className="text-center py-12 text-[#94a3b8]">Loading appointments...</div>
       ) : appointments.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <p className="text-gray-500 dark:text-gray-400 text-lg">No appointments yet</p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Click &quot;New Appointment&quot; to schedule one</p>
+        <div className="text-center py-12 glass-card-static">
+          <p className="text-[#94a3b8] text-lg">No appointments yet</p>
+          <p className="text-sm text-[#64748b] mt-2">Click &quot;New Appointment&quot; to schedule one</p>
         </div>
       ) : view === 'list' ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="glass-card-static overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900/50">
+            <table className="glass-table">
+              <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Client</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date & Time</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase hidden md:table-cell">Service</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                  <th>Client</th>
+                  <th>Date & Time</th>
+                  <th className="hidden md:table-cell">Service</th>
+                  <th>Status</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody>
                 {appointments.map(apt => (
-                  <tr key={apt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900 dark:text-white">{apt.client_name}</div>
-                      {apt.client_email && <div className="text-xs text-gray-500 dark:text-gray-400">{apt.client_email}</div>}
+                  <tr key={apt.id}>
+                    <td>
+                      <div className="font-medium text-[#f1f5f9]">{apt.client_name}</div>
+                      {apt.client_email && <div className="text-xs text-[#64748b]">{apt.client_email}</div>}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 dark:text-white">{new Date(apt.appointment_date).toLocaleDateString('en-GB')}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{apt.appointment_time} ({apt.duration || 30} mins)</div>
+                    <td>
+                      <div className="text-sm text-[#f1f5f9]">{new Date(apt.appointment_date).toLocaleDateString('en-GB')}</div>
+                      <div className="text-xs text-[#64748b]">{apt.appointment_time} ({apt.duration || 30} mins)</div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 hidden md:table-cell capitalize">{apt.service || '-'}</td>
-                    <td className="px-6 py-4">
+                    <td className="text-sm text-[#94a3b8] hidden md:table-cell capitalize">{apt.service || '-'}</td>
+                    <td>
                       <span className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(apt.status)}`}>
                         {apt.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleEdit(apt)} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 text-sm mr-3">Edit</button>
-                      <button onClick={() => handleDelete(apt.id)} className="text-red-600 dark:text-red-400 hover:text-red-700 text-sm">Cancel</button>
+                    <td className="text-right">
+                      <button onClick={() => handleEdit(apt)} className="text-[#60a5fa] hover:text-[#93bbfc] text-sm mr-3">Edit</button>
+                      <button onClick={() => handleDelete(apt.id)} className="text-[#f43f5e] hover:text-[#fb7185] text-sm">Cancel</button>
                     </td>
                   </tr>
                 ))}
@@ -311,19 +311,19 @@ export default function AppointmentsPage() {
         </div>
       ) : (
         /* Calendar View - Simple month grid */
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Calendar View</h3>
+        <div className="glass-card-static p-6">
+          <h3 className="text-lg font-semibold text-[#f1f5f9] mb-4">Calendar View</h3>
           <div className="space-y-3">
             {Array.from(new Set(appointments.map(a => a.appointment_date))).sort().map(date => (
-              <div key={date} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">{new Date(date).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h4>
+              <div key={date} className="border border-white/10 rounded-lg p-4">
+                <h4 className="font-medium text-[#f1f5f9] mb-2">{new Date(date).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h4>
                 <div className="space-y-2">
                   {appointments.filter(a => a.appointment_date === date).map(apt => (
-                    <div key={apt.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 rounded-lg px-3 py-2">
+                    <div key={apt.id} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
                       <div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">{apt.appointment_time}</span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300 ml-3">{apt.client_name}</span>
-                        {apt.service && <span className="text-xs text-gray-400 ml-2 capitalize">- {apt.service}</span>}
+                        <span className="text-sm font-medium text-[#f1f5f9]">{apt.appointment_time}</span>
+                        <span className="text-sm text-[#94a3b8] ml-3">{apt.client_name}</span>
+                        {apt.service && <span className="text-xs text-[#64748b] ml-2 capitalize">- {apt.service}</span>}
                       </div>
                       <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${getStatusColor(apt.status)}`}>{apt.status}</span>
                     </div>

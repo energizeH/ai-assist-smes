@@ -52,13 +52,13 @@ export default function CookieConsent() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[9999] p-4 animate-slideUp">
-      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-5 sm:p-6">
+      <div className="max-w-4xl mx-auto glass-card-strong rounded-xl p-5 sm:p-6">
         <div className="flex flex-col gap-4">
           <div>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">We value your privacy</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <h3 className="text-base font-semibold text-[#f1f5f9] mb-1">We value your privacy</h3>
+            <p className="text-sm text-[#94a3b8]">
               We use essential cookies to make our platform work. We&apos;d also like to set analytics cookies to help us understand how you use our service so we can improve it. Analytics cookies are only set if you give your consent.{' '}
-              <Link href="/cookies" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+              <Link href="/cookies" className="text-[#60a5fa] hover:text-[#3b82f6] font-medium transition">
                 Read our Cookie Policy
               </Link>
             </p>
@@ -66,13 +66,13 @@ export default function CookieConsent() {
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button
               onClick={() => handleConsent('essential-only')}
-              className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors order-2 sm:order-1"
+              className="btn btn-outline text-sm order-2 sm:order-1"
             >
               Essential Only
             </button>
             <button
               onClick={() => handleConsent('accepted')}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors order-1 sm:order-2"
+              className="btn btn-primary text-sm order-1 sm:order-2"
             >
               Accept All Cookies
             </button>

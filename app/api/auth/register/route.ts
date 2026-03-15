@@ -3,6 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '../../../lib/rate-limit';
 import { sendWelcomeEmail } from '../../../lib/email';
 
+function getAdminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -88,6 +95,17 @@ export async function POST(request: Request) {
         { error: getFriendlyError(error.message) },
         { status: 400 }
       );
+    }
+
+    // Log platform-level signup activity for CEO dashboard (non-blocking)
+    if (data.user && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const admin = getAdminClient()
+      admin.from('activities').insert([{
+        user_id: data.user.id,
+        type: 'signup',
+        title: 'New user registered',
+        description: `${name} (${email}) signed up`,
+      }]).then(() => {})
     }
 
     // Send welcome email (non-blocking)

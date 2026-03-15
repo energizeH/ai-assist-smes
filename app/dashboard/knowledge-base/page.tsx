@@ -103,17 +103,17 @@ export default function KnowledgeBasePage() {
 
   return (
     <DashboardLayout title="AI Knowledge Base" subtitle="Train your AI chatbot with business information">
-      {error && <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">{error}</div>}
-      {success && <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg">{success}</div>}
+      {error && <div className="mb-4 bg-[#f43f5e]/10 border border-[#f43f5e]/20 text-[#fb7185] px-4 py-3 rounded-lg">{error}</div>}
+      {success && <div className="mb-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg">{success}</div>}
 
       {/* Info Banner */}
-      <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+      <div className="mb-6 bg-[#3b82f6]/10 border border-[#3b82f6]/20 rounded-xl p-4">
         <div className="flex items-start gap-3">
           <span className="text-2xl">🧠</span>
           <div>
-            <h3 className="font-medium text-blue-900 dark:text-blue-300">How it works</h3>
-            <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-              Add your business information here so the AI chatbot can answer customer questions accurately. 
+            <h3 className="font-medium text-[#60a5fa]">How it works</h3>
+            <p className="text-sm text-[#94a3b8] mt-1">
+              Add your business information here so the AI chatbot can answer customer questions accurately.
               The more details you provide about your services, pricing, and policies, the better the AI will respond.
             </p>
           </div>
@@ -123,48 +123,48 @@ export default function KnowledgeBasePage() {
       {/* Stats & Filter */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500 dark:text-gray-400">{entries.length} entries</span>
+          <span className="text-sm text-[#94a3b8]">{entries.length} entries</span>
           <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
-            className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            className="input text-sm">
             <option value="all">All Categories</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
         </div>
-        <button onClick={openAddForm} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button onClick={openAddForm} className="btn btn-primary">
           + Add Entry
         </button>
       </div>
 
       {/* Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{editingEntry ? 'Edit Entry' : 'Add Knowledge Base Entry'}</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
+          <div className="glass-card-strong p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-[#f1f5f9] mb-6">{editingEntry ? 'Edit Entry' : 'Add Knowledge Base Entry'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Category</label>
                 <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                  className="input w-full text-sm">
                   {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Title *</label>
                 <input required value={form.title} onChange={e => setForm({...form, title: e.target.value})}
                   placeholder="e.g. Opening Hours, Return Policy, Service List"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                  className="input w-full text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content *</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Content *</label>
                 <textarea required value={form.content} onChange={e => setForm({...form, content: e.target.value})} rows={6}
                   placeholder="Enter the information the AI should know about this topic..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                  className="input w-full text-sm" />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
+                <button type="submit" disabled={saving} className="flex-1 btn btn-primary py-2 disabled:opacity-50">
                   {saving ? 'Saving...' : (editingEntry ? 'Update Entry' : 'Add Entry')}
                 </button>
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-white py-2 rounded-lg font-medium transition-colors">Cancel</button>
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-[#f1f5f9] py-2 rounded-lg font-medium transition-colors">Cancel</button>
               </div>
             </form>
           </div>
@@ -173,33 +173,33 @@ export default function KnowledgeBasePage() {
 
       {/* Entries */}
       {loading ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading knowledge base...</div>
+        <div className="text-center py-12 text-[#94a3b8]">Loading knowledge base...</div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="text-center py-12 glass-card-static">
           <p className="text-3xl mb-3">🧠</p>
-          <p className="text-gray-500 dark:text-gray-400 text-lg">No entries yet</p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Add business information so the AI can answer customer questions</p>
+          <p className="text-[#94a3b8] text-lg">No entries yet</p>
+          <p className="text-sm text-[#64748b] mt-2">Add business information so the AI can answer customer questions</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map(entry => {
             const cat = categories.find(c => c.id === entry.category)
             return (
-              <div key={entry.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+              <div key={entry.id} className="glass-card-static p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <span className="px-2 py-0.5 text-xs rounded-full font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    <span className="badge-info">
                       {cat?.icon} {cat?.label || entry.category}
                     </span>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleEdit(entry)} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 text-xs font-medium">Edit</button>
-                    <button onClick={() => handleDelete(entry.id)} className="text-red-600 dark:text-red-400 hover:text-red-700 text-xs font-medium">Delete</button>
+                    <button onClick={() => handleEdit(entry)} className="text-[#60a5fa] hover:text-[#93bbfc] text-xs font-medium">Edit</button>
+                    <button onClick={() => handleDelete(entry.id)} className="text-[#f43f5e] hover:text-[#fb7185] text-xs font-medium">Delete</button>
                   </div>
                 </div>
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{entry.title}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">{entry.content}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">Added {new Date(entry.created_at).toLocaleDateString('en-GB')}</p>
+                <h3 className="font-semibold text-[#f1f5f9] mb-2">{entry.title}</h3>
+                <p className="text-sm text-[#94a3b8] line-clamp-3">{entry.content}</p>
+                <p className="text-xs text-[#64748b] mt-3">Added {new Date(entry.created_at).toLocaleDateString('en-GB')}</p>
               </div>
             )
           })}

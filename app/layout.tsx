@@ -7,7 +7,7 @@ import ChatWidget from './components/ChatWidget'
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aiassistsmes.co.uk'
 
 export const viewport: Viewport = {
-  themeColor: '#2563EB',
+  themeColor: '#0a0f1e',
   width: 'device-width',
   initialScale: 1,
 }
@@ -72,7 +72,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      </head>
       <body>
         {children}
         <ThemeToggle />

@@ -35,39 +35,42 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold text-blue-600">
+    <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center py-12 px-4 relative overflow-hidden">
+      <div className="orb orb-blue w-96 h-96 -top-48 -left-48" />
+      <div className="orb orb-violet w-72 h-72 -bottom-36 -right-36" />
+
+      <div className="max-w-md w-full relative z-10">
+        <div className="text-center mb-8 animate-fadeIn">
+          <Link href="/" className="text-3xl font-bold gradient-text">
             AI-Assist for SMEs
           </Link>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">Forgot Password</h2>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">Enter your email and we'll send you a reset link</p>
+          <h2 className="mt-6 text-3xl font-bold text-[#f1f5f9]">Forgot Password</h2>
+          <p className="mt-2 text-[#94a3b8]">Enter your email and we&apos;ll send you a reset link</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+        <div className="glass-card-strong p-8 animate-fadeIn stagger-2">
           {status === 'success' ? (
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-500/20">
+                <svg className="w-8 h-8 text-[#10b981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Email Sent!</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
-              <Link href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-                ← Back to Login
+              <h3 className="text-xl font-semibold text-[#f1f5f9] mb-2">Email Sent!</h3>
+              <p className="text-[#94a3b8] mb-6">{message}</p>
+              <Link href="/login" className="text-[#60a5fa] hover:text-[#3b82f6] font-medium transition">
+                &larr; Back to Login
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               {status === 'error' && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
                   {message}
                 </div>
               )}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-[#94a3b8] mb-2">
                   Email Address
                 </label>
                 <input
@@ -76,7 +79,7 @@ export default function ForgotPasswordPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800"
+                  className="input w-full"
                   placeholder="you@company.com"
                   disabled={status === 'loading'}
                 />
@@ -84,13 +87,13 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="btn btn-primary w-full py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {status === 'loading' ? 'Sending...' : 'Send Reset Link'}
               </button>
               <div className="text-center">
-                <Link href="/login" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm">
-                  ← Back to Login
+                <Link href="/login" className="text-[#64748b] hover:text-[#f1f5f9] text-sm transition">
+                  &larr; Back to Login
                 </Link>
               </div>
             </form>

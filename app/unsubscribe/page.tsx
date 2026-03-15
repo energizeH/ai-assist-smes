@@ -26,11 +26,11 @@ function UnsubscribeContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
-      <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-100 dark:border-gray-800">
+    <div className="min-h-screen bg-[#0a0f1e] flex flex-col">
+      <nav className="nav-glass sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <Link href="/" className="text-2xl font-bold gradient-text">
               AI-Assist for SMEs
             </Link>
           </div>
@@ -41,32 +41,32 @@ function UnsubscribeContent() {
         <div className="max-w-md w-full text-center">
           {status === 'done' ? (
             <>
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-[#10b981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Unsubscribed</h1>
-              <p className="text-gray-500 dark:text-gray-400 mb-8">
+              <h1 className="text-2xl font-bold text-[#f1f5f9] mb-3">Unsubscribed</h1>
+              <p className="text-[#94a3b8] mb-8">
                 You have been unsubscribed from marketing emails. You will still receive important account and service emails.
               </p>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
+              <p className="text-sm text-[#64748b] mb-6">
                 You can re-enable marketing emails at any time from your{' '}
-                <Link href="/dashboard/settings" className="text-blue-600 dark:text-blue-400 hover:underline">
+                <Link href="/dashboard/settings" className="text-[#60a5fa] hover:text-[#3b82f6] transition">
                   account settings
                 </Link>.
               </p>
               <Link
                 href="/"
-                className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="btn btn-primary inline-block"
               >
                 Go to Homepage
               </Link>
             </>
           ) : (
             <>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Unsubscribe</h1>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">
+              <h1 className="text-2xl font-bold text-[#f1f5f9] mb-3">Unsubscribe</h1>
+              <p className="text-[#94a3b8] mb-6">
                 Enter your email address to unsubscribe from marketing emails.
               </p>
               <form onSubmit={handleUnsubscribe} className="space-y-4">
@@ -76,17 +76,17 @@ function UnsubscribeContent() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="your@email.com"
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="input w-full"
                 />
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                  className="btn btn-primary w-full disabled:opacity-50"
                 >
                   {status === 'loading' ? 'Processing...' : 'Unsubscribe'}
                 </button>
               </form>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-4">
+              <p className="text-xs text-[#64748b] mt-4">
                 This will only unsubscribe you from marketing and promotional emails. You will continue to receive essential account and service emails.
               </p>
             </>
@@ -100,8 +100,8 @@ function UnsubscribeContent() {
 export default function UnsubscribePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
+      <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center">
+        <p className="text-[#94a3b8]">Loading...</p>
       </div>
     }>
       <UnsubscribeContent />

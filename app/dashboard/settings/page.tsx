@@ -311,22 +311,20 @@ export default function SettingsPage() {
     { id: 'data', label: 'My Data', icon: '🛡️' },
   ]
 
-  const inputClass = "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-
   return (
     <DashboardLayout title="Settings" subtitle="Manage your account and integrations">
       {message && (
         <div className={`mb-6 px-4 py-3 rounded-lg text-sm ${
           message.type === 'success'
-            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
-            : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
+            ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+            : 'bg-[#f43f5e]/10 border border-[#f43f5e]/20 text-[#fb7185]'
         }`}>
           {message.text}
         </div>
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading settings...</div>
+        <div className="text-center py-12 text-[#94a3b8]">Loading settings...</div>
       ) : (
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar Tabs */}
@@ -336,8 +334,8 @@ export default function SettingsPage() {
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      ? 'glass-tab-active'
+                      : 'glass-tab'
                   }`}>
                   <span>{tab.icon}</span>
                   {tab.label}
@@ -350,28 +348,27 @@ export default function SettingsPage() {
           <div className="flex-1 max-w-2xl">
             {/* Profile */}
             {activeTab === 'profile' && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Profile Information</h2>
+              <div className="glass-card-static p-6">
+                <h2 className="text-lg font-semibold text-[#f1f5f9] mb-6">Profile Information</h2>
                 <form onSubmit={handleSaveProfile} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-                    <input value={profile.full_name} onChange={e => setProfile({...profile, full_name: e.target.value})} className={inputClass} />
+                    <label className="block text-sm font-medium text-[#94a3b8] mb-1">Full Name</label>
+                    <input value={profile.full_name} onChange={e => setProfile({...profile, full_name: e.target.value})} className="input w-full text-sm" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                    <input value={profile.email} disabled className={`${inputClass} opacity-60 cursor-not-allowed`} />
-                    <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
+                    <label className="block text-sm font-medium text-[#94a3b8] mb-1">Email</label>
+                    <input value={profile.email} disabled className="input w-full text-sm opacity-60 cursor-not-allowed" />
+                    <p className="text-xs text-[#64748b] mt-1">Email cannot be changed</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company</label>
-                    <input value={profile.company} onChange={e => setProfile({...profile, company: e.target.value})} className={inputClass} />
+                    <label className="block text-sm font-medium text-[#94a3b8] mb-1">Company</label>
+                    <input value={profile.company} onChange={e => setProfile({...profile, company: e.target.value})} className="input w-full text-sm" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-                    <input value={profile.phone} onChange={e => setProfile({...profile, phone: e.target.value})} className={inputClass} />
+                    <label className="block text-sm font-medium text-[#94a3b8] mb-1">Phone</label>
+                    <input value={profile.phone} onChange={e => setProfile({...profile, phone: e.target.value})} className="input w-full text-sm" />
                   </div>
-                  <button type="submit" disabled={saving}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  <button type="submit" disabled={saving} className="btn btn-primary px-6 py-2 text-sm disabled:opacity-50">
                     {saving ? 'Saving...' : 'Save Profile'}
                   </button>
                 </form>
@@ -380,24 +377,23 @@ export default function SettingsPage() {
 
             {/* Password */}
             {activeTab === 'password' && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Change Password</h2>
+              <div className="glass-card-static p-6">
+                <h2 className="text-lg font-semibold text-[#f1f5f9] mb-6">Change Password</h2>
                 <form onSubmit={handleChangePassword} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
+                    <label className="block text-sm font-medium text-[#94a3b8] mb-1">New Password</label>
                     <input type="password" required minLength={8} value={passwords.new_password}
-                      onChange={e => setPasswords({...passwords, new_password: e.target.value})} className={inputClass}
+                      onChange={e => setPasswords({...passwords, new_password: e.target.value})} className="input w-full text-sm"
                       placeholder="Min 8 characters" />
                     <PasswordStrength password={passwords.new_password} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
+                    <label className="block text-sm font-medium text-[#94a3b8] mb-1">Confirm New Password</label>
                     <input type="password" required minLength={8} value={passwords.confirm_password}
-                      onChange={e => setPasswords({...passwords, confirm_password: e.target.value})} className={inputClass}
+                      onChange={e => setPasswords({...passwords, confirm_password: e.target.value})} className="input w-full text-sm"
                       placeholder="Repeat your new password" />
                   </div>
-                  <button type="submit" disabled={saving}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  <button type="submit" disabled={saving} className="btn btn-primary px-6 py-2 text-sm disabled:opacity-50">
                     {saving ? 'Updating...' : 'Update Password'}
                   </button>
                 </form>
@@ -406,8 +402,8 @@ export default function SettingsPage() {
 
             {/* Notifications */}
             {activeTab === 'notifications' && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Notification Preferences</h2>
+              <div className="glass-card-static p-6">
+                <h2 className="text-lg font-semibold text-[#f1f5f9] mb-6">Notification Preferences</h2>
                 <div className="space-y-5">
                   <ToggleSwitch
                     enabled={notifications.notifications_email}
@@ -435,7 +431,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <button onClick={handleSaveNotifications} disabled={saving}
-                  className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  className="mt-6 btn btn-primary px-6 py-2 text-sm disabled:opacity-50">
                   {saving ? 'Saving...' : 'Save Preferences'}
                 </button>
               </div>
@@ -445,9 +441,9 @@ export default function SettingsPage() {
             {activeTab === 'integrations' && (
               <div className="space-y-6">
                 {/* Lead Webhook URL */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Lead Webhook URL</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <div className="glass-card-static p-6">
+                  <h2 className="text-lg font-semibold text-[#f1f5f9] mb-2">Lead Webhook URL</h2>
+                  <p className="text-sm text-[#94a3b8] mb-4">
                     Receive leads from external systems via this unique webhook endpoint.
                   </p>
 
@@ -458,11 +454,11 @@ export default function SettingsPage() {
                           type="text"
                           readOnly
                           value={`https://aiassistsmes.co.uk/api/leads/webhook?key=${webhookKey}`}
-                          className={`${inputClass} font-mono text-xs`}
+                          className="input w-full font-mono text-xs"
                         />
                         <button
                           onClick={() => copyToClipboard(`https://aiassistsmes.co.uk/api/leads/webhook?key=${webhookKey}`)}
-                          className="flex-shrink-0 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg text-sm transition-colors"
+                          className="flex-shrink-0 bg-white/5 hover:bg-white/10 text-[#94a3b8] px-3 py-2 rounded-lg text-sm transition-colors"
                           title="Copy URL"
                         >
                           📋
@@ -471,7 +467,7 @@ export default function SettingsPage() {
                       <button
                         onClick={() => generateWebhookKey(true)}
                         disabled={regeneratingKey}
-                        className="text-sm text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
+                        className="text-sm text-[#f43f5e] hover:text-[#fb7185] hover:underline disabled:opacity-50"
                       >
                         {regeneratingKey ? 'Regenerating...' : 'Regenerate Key'}
                       </button>
@@ -480,23 +476,23 @@ export default function SettingsPage() {
                     <button
                       onClick={() => generateWebhookKey(false)}
                       disabled={regeneratingKey}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      className="btn btn-primary px-4 py-2 text-sm disabled:opacity-50"
                     >
                       {regeneratingKey ? 'Generating...' : 'Generate Webhook Key'}
                     </button>
                   )}
 
-                  <div className="mt-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
-                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Usage:</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Send POST requests with JSON body containing: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">name</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">email</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">phone</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">company</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">notes</code>
+                  <div className="mt-4 bg-white/5 rounded-lg p-3">
+                    <p className="text-xs font-medium text-[#f1f5f9] mb-1">Usage:</p>
+                    <p className="text-xs text-[#94a3b8]">
+                      Send POST requests with JSON body containing: <code className="bg-white/10 px-1 rounded">name</code>, <code className="bg-white/10 px-1 rounded">email</code>, <code className="bg-white/10 px-1 rounded">phone</code>, <code className="bg-white/10 px-1 rounded">company</code>, <code className="bg-white/10 px-1 rounded">notes</code>
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">API Integrations</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Connect your external services to enable automations</p>
+                <div className="glass-card-static p-6">
+                  <h2 className="text-lg font-semibold text-[#f1f5f9] mb-2">API Integrations</h2>
+                  <p className="text-sm text-[#94a3b8] mb-6">Connect your external services to enable automations</p>
 
                   <div className="space-y-5">
                     {[
@@ -508,7 +504,7 @@ export default function SettingsPage() {
                       { key: 'google_calendar_key', label: 'Google Calendar API Key', icon: '📅', placeholder: 'Your Google Calendar API key' },
                     ].map(item => (
                       <div key={item.key}>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="flex items-center gap-2 text-sm font-medium text-[#94a3b8] mb-1">
                           <span>{item.icon}</span> {item.label}
                         </label>
                         <input
@@ -516,20 +512,20 @@ export default function SettingsPage() {
                           value={apiKeys[item.key as keyof typeof apiKeys]}
                           onChange={e => setApiKeys({...apiKeys, [item.key]: e.target.value})}
                           placeholder={item.placeholder}
-                          className={inputClass}
+                          className="input w-full text-sm"
                         />
                       </div>
                     ))}
                   </div>
 
                   <button onClick={handleSaveApiKeys} disabled={saving}
-                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                    className="mt-6 btn btn-primary px-6 py-2 text-sm disabled:opacity-50">
                     {saving ? 'Saving...' : 'Save API Keys'}
                   </button>
                 </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
-                  <p className="text-sm text-blue-700 dark:text-blue-400">
+                <div className="bg-[#3b82f6]/10 rounded-xl border border-[#3b82f6]/20 p-4">
+                  <p className="text-sm text-[#60a5fa]">
                     <strong>Security:</strong> API keys are stored securely and encrypted. They are only used to connect your external services.
                   </p>
                 </div>
@@ -538,26 +534,26 @@ export default function SettingsPage() {
 
             {/* Email Templates (Enterprise only) */}
             {activeTab === 'email_templates' && (
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-purple-200 dark:border-purple-700 p-8">
+              <div className="bg-gradient-to-br from-[#7c3aed]/20 to-[#6366f1]/20 rounded-xl border-2 border-[#7c3aed]/30 p-8">
                 <div className="text-center">
                   <div className="text-5xl mb-4">✉️</div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Custom Email Templates</h2>
-                  <span className="inline-block bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs font-semibold px-3 py-1 rounded-full mb-4">
+                  <h2 className="text-xl font-bold text-[#f1f5f9] mb-2">Custom Email Templates</h2>
+                  <span className="inline-block bg-[#7c3aed]/20 text-[#a855f7] text-xs font-semibold px-3 py-1 rounded-full mb-4">
                     Enterprise Feature — Coming Soon
                   </span>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                  <p className="text-[#94a3b8] mb-6 max-w-md mx-auto">
                     You&apos;ll soon be able to design and customise your own email templates for:
                   </p>
                   <ul className="text-left max-w-xs mx-auto space-y-2 mb-8">
                     {['Welcome emails', 'Appointment confirmations', 'Follow-up sequences', 'Invoice notifications'].map(item => (
-                      <li key={item} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                        <span className="w-1.5 h-1.5 bg-purple-500 rounded-full flex-shrink-0" />
+                      <li key={item} className="flex items-center gap-2 text-[#f1f5f9]">
+                        <span className="w-1.5 h-1.5 bg-[#a855f7] rounded-full flex-shrink-0" />
                         {item}
                       </li>
                     ))}
                   </ul>
-                  <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-4 max-w-sm mx-auto">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="bg-white/5 rounded-lg p-4 max-w-sm mx-auto border border-white/10">
+                    <p className="text-sm text-[#94a3b8]">
                       We&apos;re building this feature now. You&apos;ll be notified when it&apos;s ready.
                     </p>
                   </div>
@@ -568,22 +564,22 @@ export default function SettingsPage() {
             {/* Data Rights (GDPR) */}
             {activeTab === 'data' && (
               <div className="space-y-6">
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Your Data Rights</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                <div className="glass-card-static p-6">
+                  <h2 className="text-lg font-semibold text-[#f1f5f9] mb-2">Your Data Rights</h2>
+                  <p className="text-sm text-[#94a3b8] mb-6">
                     Under the UK GDPR and Data Protection Act 2018, you have the right to access, export, and delete your personal data.
                   </p>
 
                   {/* Data Export */}
-                  <div className="border-b border-gray-200 dark:border-gray-700 pb-6 mb-6">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Export Your Data</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <div className="border-b border-white/10 pb-6 mb-6">
+                    <h3 className="text-base font-semibold text-[#f1f5f9] mb-2">Export Your Data</h3>
+                    <p className="text-sm text-[#94a3b8] mb-4">
                       Download a copy of all your personal data in a machine-readable format (JSON). This includes your profile, settings, appointments, and leads data. This is your right under Article 20 (Right to Data Portability).
                     </p>
                     <button
                       onClick={handleExportData}
                       disabled={exportingData}
-                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-2 btn btn-primary px-5 py-2.5 text-sm disabled:opacity-50"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -594,11 +590,11 @@ export default function SettingsPage() {
 
                   {/* Account Deletion */}
                   <div>
-                    <h3 className="text-base font-semibold text-red-600 dark:text-red-400 mb-2">Delete Your Account</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    <h3 className="text-base font-semibold text-[#f43f5e] mb-2">Delete Your Account</h3>
+                    <p className="text-sm text-[#94a3b8] mb-2">
                       Permanently delete your account and all associated data. This action cannot be undone. Under Article 17 (Right to Erasure), this will:
                     </p>
-                    <ul className="text-sm text-gray-500 dark:text-gray-400 list-disc pl-5 mb-4 space-y-1">
+                    <ul className="text-sm text-[#94a3b8] list-disc pl-5 mb-4 space-y-1">
                       <li>Cancel any active subscription</li>
                       <li>Delete your profile, settings, and preferences</li>
                       <li>Delete all your appointments and leads data</li>
@@ -608,7 +604,7 @@ export default function SettingsPage() {
                     {!showDeleteConfirm ? (
                       <button
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="inline-flex items-center gap-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                        className="inline-flex items-center gap-2 border border-[#f43f5e]/30 text-[#f43f5e] hover:bg-[#f43f5e]/10 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -616,8 +612,8 @@ export default function SettingsPage() {
                         Delete My Account
                       </button>
                     ) : (
-                      <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                        <p className="text-sm font-medium text-red-800 dark:text-red-300 mb-3">
+                      <div className="bg-[#f43f5e]/10 border border-[#f43f5e]/20 rounded-lg p-4">
+                        <p className="text-sm font-medium text-[#fb7185] mb-3">
                           This is permanent and cannot be undone. Type <strong>&quot;DELETE MY ACCOUNT&quot;</strong> to confirm:
                         </p>
                         <input
@@ -625,19 +621,19 @@ export default function SettingsPage() {
                           value={deleteConfirmation}
                           onChange={(e) => setDeleteConfirmation(e.target.value)}
                           placeholder="Type DELETE MY ACCOUNT"
-                          className="w-full px-3 py-2 border border-red-300 dark:border-red-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 outline-none text-sm mb-3"
+                          className="w-full px-3 py-2 border border-[#f43f5e]/30 rounded-lg bg-white/5 text-[#f1f5f9] focus:ring-2 focus:ring-[#f43f5e] outline-none text-sm mb-3"
                         />
                         <div className="flex gap-3">
                           <button
                             onClick={handleDeleteAccount}
                             disabled={deletingAccount || deleteConfirmation !== 'DELETE MY ACCOUNT'}
-                            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-[#f43f5e] hover:bg-[#e11d48] text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {deletingAccount ? 'Deleting...' : 'Permanently Delete'}
                           </button>
                           <button
                             onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmation('') }}
-                            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+                            className="text-[#94a3b8] hover:text-[#f1f5f9] px-5 py-2 rounded-lg text-sm font-medium transition-colors"
                           >
                             Cancel
                           </button>
@@ -647,8 +643,8 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4">
-                  <p className="text-sm text-blue-700 dark:text-blue-400">
+                <div className="bg-[#3b82f6]/10 rounded-xl border border-[#3b82f6]/20 p-4">
+                  <p className="text-sm text-[#60a5fa]">
                     <strong>Your rights:</strong> You can also exercise your data rights by emailing{' '}
                     <a href="mailto:privacy@aiassistsmes.co.uk" className="underline">privacy@aiassistsmes.co.uk</a>.
                     We will respond within one month as required by UK GDPR.

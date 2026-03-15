@@ -100,12 +100,12 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-800 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+    <div className="fixed inset-0 bg-gradient-to-br from-[#0a0f1e] via-[#111827] to-[#1e1b4b] z-50 flex items-center justify-center p-4">
+      <div className="glass-card-strong max-w-lg w-full overflow-hidden">
         {/* Progress bar */}
-        <div className="h-1.5 bg-gray-100 dark:bg-gray-700">
+        <div className="h-1.5 bg-white/10">
           <div
-            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 rounded-full"
+            className="h-full bg-gradient-to-r from-[#3b82f6] to-[#a855f7] transition-all duration-500 rounded-full"
             style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
           />
         </div>
@@ -117,15 +117,15 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
               <div key={step.id} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                   i < currentStep
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-emerald-500 text-white'
                     : i === currentStep
-                      ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/50'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
+                      ? 'bg-[#3b82f6] text-white ring-4 ring-[#3b82f6]/30'
+                      : 'bg-white/10 text-[#64748b]'
                 }`}>
                   {i < currentStep ? '✓' : i + 1}
                 </div>
                 {i < steps.length - 1 && (
-                  <div className={`w-12 sm:w-16 h-0.5 mx-1 ${i < currentStep ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
+                  <div className={`w-12 sm:w-16 h-0.5 mx-1 ${i < currentStep ? 'bg-emerald-500' : 'bg-white/10'}`} />
                 )}
               </div>
             ))}
@@ -134,17 +134,17 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
           {/* Step content */}
           <div className="text-center mb-8">
             <span className="text-4xl mb-4 block">{steps[currentStep].icon}</span>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-[#f1f5f9] mb-2">
               {currentStep === 0 && userName ? `Welcome, ${userName.split(' ')[0]}!` : steps[currentStep].title}
             </h2>
-            <p className="text-gray-500 dark:text-gray-400">{steps[currentStep].description}</p>
+            <p className="text-[#94a3b8]">{steps[currentStep].description}</p>
           </div>
 
           {/* Step-specific content */}
           {currentStep === 0 && (
             <div className="space-y-4 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                AI-Assist helps you automate client communications, capture leads, 
+              <p className="text-sm text-[#94a3b8]">
+                AI-Assist helps you automate client communications, capture leads,
                 and manage appointments — so you can focus on growing your business.
               </p>
               <div className="grid grid-cols-3 gap-3 mt-6">
@@ -153,9 +153,9 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
                   { icon: '📅', label: 'Scheduling' },
                   { icon: '🎯', label: 'Lead Capture' },
                 ].map(item => (
-                  <div key={item.label} className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 text-center">
+                  <div key={item.label} className="bg-[#3b82f6]/10 rounded-xl p-3 text-center border border-[#3b82f6]/20">
                     <span className="text-2xl block mb-1">{item.icon}</span>
-                    <span className="text-xs font-medium text-blue-700 dark:text-blue-400">{item.label}</span>
+                    <span className="text-xs font-medium text-[#60a5fa]">{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -165,20 +165,20 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
           {currentStep === 1 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company Name *</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Company Name *</label>
                 <input
                   value={company}
                   onChange={e => setCompany(e.target.value)}
                   placeholder="e.g. Acme Solutions"
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="input w-full"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Industry</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Industry</label>
                 <select
                   value={industry}
                   onChange={e => setIndustry(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="input w-full"
                 >
                   <option value="">Select your industry</option>
                   <option value="retail">Retail & E-commerce</option>
@@ -194,11 +194,11 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team Size</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Team Size</label>
                 <select
                   value={teamSize}
                   onChange={e => setTeamSize(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="input w-full"
                 >
                   <option value="">Select team size</option>
                   <option value="1">Just me</option>
@@ -219,15 +219,15 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
                   onClick={() => toggleGoal(goal.id)}
                   className={`p-3 rounded-xl border-2 text-left transition-all ${
                     selectedGoals.includes(goal.id)
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                      ? 'border-[#3b82f6] bg-[#3b82f6]/10'
+                      : 'border-white/10 hover:border-white/20'
                   }`}
                 >
                   <span className="text-lg block mb-1">{goal.icon}</span>
                   <span className={`text-sm font-medium ${
                     selectedGoals.includes(goal.id)
-                      ? 'text-blue-700 dark:text-blue-400'
-                      : 'text-gray-700 dark:text-gray-300'
+                      ? 'text-[#60a5fa]'
+                      : 'text-[#f1f5f9]'
                   }`}>{goal.label}</span>
                 </button>
               ))}
@@ -236,10 +236,10 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
 
           {currentStep === 3 && (
             <div className="text-center space-y-4">
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800">
-                <p className="text-green-700 dark:text-green-400 font-medium">Your account is ready to go!</p>
+              <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
+                <p className="text-emerald-400 font-medium">Your account is ready to go!</p>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-[#94a3b8]">
                 Here&apos;s what you can do next:
               </p>
               <div className="text-left space-y-2">
@@ -249,8 +249,8 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
                   'Schedule an appointment',
                   'Choose a subscription plan',
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                    <span className="w-5 h-5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-xs flex-shrink-0">{i + 1}</span>
+                  <div key={i} className="flex items-center gap-2 text-sm text-[#f1f5f9]">
+                    <span className="w-5 h-5 bg-[#3b82f6]/15 text-[#60a5fa] rounded-full flex items-center justify-center text-xs flex-shrink-0">{i + 1}</span>
                     {item}
                   </div>
                 ))}
@@ -263,7 +263,7 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
             {currentStep > 0 && (
               <button
                 onClick={() => setCurrentStep(prev => prev - 1)}
-                className="flex-1 py-2.5 rounded-lg font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="flex-1 py-2.5 rounded-lg font-medium bg-white/5 text-[#f1f5f9] hover:bg-white/10 transition-colors"
               >
                 Back
               </button>
@@ -272,7 +272,7 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
               <button
                 onClick={() => setCurrentStep(prev => prev + 1)}
                 disabled={!canProceed()}
-                className="flex-1 py-2.5 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-2.5 rounded-lg font-medium btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue
               </button>
@@ -280,7 +280,7 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
               <button
                 onClick={handleComplete}
                 disabled={saving}
-                className="flex-1 py-2.5 rounded-lg font-medium bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-lg font-medium bg-gradient-to-r from-[#3b82f6] to-[#7c3aed] text-white hover:from-[#2563eb] hover:to-[#6d28d9] transition-colors disabled:opacity-50"
               >
                 {saving ? 'Setting up...' : 'Go to Dashboard'}
               </button>
@@ -291,7 +291,7 @@ export default function OnboardingWizard({ onComplete, userName }: OnboardingWiz
           {currentStep < steps.length - 1 && (
             <button
               onClick={onComplete}
-              className="mt-3 w-full text-center text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              className="mt-3 w-full text-center text-xs text-[#64748b] hover:text-[#94a3b8] transition-colors"
             >
               Skip setup for now
             </button>

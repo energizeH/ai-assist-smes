@@ -71,12 +71,12 @@ export async function POST(request: Request) {
         notes: `Website enquiry: ${safeSubject} — ${safeMessage}`,
       }])
 
-      // Log activity for CEO user
+      // Log activity for CEO dashboard (platform-level event)
       await supabase.from('activities').insert([{
         user_id: CEO_USER_ID,
-        type: 'lead',
+        type: 'contact',
         title: 'New website enquiry',
-        description: `Lead from website contact form: ${safeName}`,
+        description: `Enquiry received from ${safeName} (${email})`,
       }])
     } catch (dbErr) {
       console.error('DB save error (non-blocking):', dbErr)

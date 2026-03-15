@@ -26,25 +26,25 @@ function ToastIcon({ type }: { type: ToastType }) {
   switch (type) {
     case 'success':
       return (
-        <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       )
     case 'error':
       return (
-        <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5 text-[#f43f5e]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       )
     case 'info':
       return (
-        <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5 text-[#60a5fa]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       )
     case 'warning':
       return (
-        <svg className="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5 text-[#fbbf24]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
       )
@@ -52,10 +52,10 @@ function ToastIcon({ type }: { type: ToastType }) {
 }
 
 const typeStyles: Record<ToastType, string> = {
-  success: 'border-green-400 bg-green-50 dark:bg-green-900/20 dark:border-green-600',
-  error: 'border-red-400 bg-red-50 dark:bg-red-900/20 dark:border-red-600',
-  info: 'border-blue-400 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-600',
-  warning: 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-600',
+  success: 'border-emerald-500/30 bg-emerald-500/10',
+  error: 'border-[#f43f5e]/30 bg-[#f43f5e]/10',
+  info: 'border-[#3b82f6]/30 bg-[#3b82f6]/10',
+  warning: 'border-[#f59e0b]/30 bg-[#f59e0b]/10',
 }
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string) => void }) {
@@ -75,18 +75,18 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg transition-all duration-300 ${
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg backdrop-blur-xl bg-[#111827]/90 transition-all duration-300 ${
         typeStyles[toast.type]
       } ${visible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
     >
       <ToastIcon type={toast.type} />
-      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 flex-1">{toast.message}</p>
+      <p className="text-sm font-medium text-[#f1f5f9] flex-1">{toast.message}</p>
       <button
         onClick={() => {
           setVisible(false)
           setTimeout(() => onDismiss(toast.id), 300)
         }}
-        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0"
+        className="text-[#64748b] hover:text-[#f1f5f9] transition-colors flex-shrink-0"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

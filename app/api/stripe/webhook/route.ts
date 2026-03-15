@@ -78,12 +78,12 @@ export async function POST(req: NextRequest) {
             );
           if (error) console.error('DB upsert error (checkout.session.completed):', error);
 
-          // Log activity
+          // Log activity (platform-level for CEO dashboard)
           await supabase.from('activities').insert([{
             user_id: userId,
-            type: 'billing',
-            title: `Subscribed to ${planId} plan`,
-            description: 'Subscription activated successfully',
+            type: 'subscription',
+            title: `New subscription: ${planId.charAt(0).toUpperCase() + planId.slice(1)}`,
+            description: `User subscribed to the ${planId} plan`,
           }]);
 
           // Send confirmation email
@@ -133,12 +133,12 @@ export async function POST(req: NextRequest) {
               .update({ status: 'past_due' })
               .eq('user_id', userId);
 
-            // Log activity for visibility
+            // Log activity (platform-level for CEO dashboard)
             await supabase.from('activities').insert([{
               user_id: userId,
-              type: 'billing',
+              type: 'payment',
               title: 'Payment failed',
-              description: 'Your subscription payment could not be processed. Please update your payment method.',
+              description: 'A subscription payment could not be processed',
             }]);
 
             // Send payment failed email
@@ -162,12 +162,12 @@ export async function POST(req: NextRequest) {
             .update({ status: 'cancelled' })
             .eq('user_id', userId);
 
-          // Log activity
+          // Log activity (platform-level for CEO dashboard)
           await supabase.from('activities').insert([{
             user_id: userId,
-            type: 'billing',
+            type: 'cancellation',
             title: 'Subscription cancelled',
-            description: 'Your subscription has been cancelled. You can resubscribe anytime.',
+            description: 'A user cancelled their subscription',
           }]);
 
           // Send cancellation email

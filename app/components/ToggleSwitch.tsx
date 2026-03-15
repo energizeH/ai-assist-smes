@@ -20,8 +20,8 @@ export default function ToggleSwitch({ enabled, onChange, label, description, si
     <div className={`flex items-center justify-between gap-4 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       {(label || description) && (
         <div className="flex-1 min-w-0">
-          {label && <p className="text-sm font-medium text-gray-900 dark:text-white">{label}</p>}
-          {description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>}
+          {label && <p className="text-sm font-medium text-[#f1f5f9]">{label}</p>}
+          {description && <p className="text-xs text-[#64748b] mt-0.5">{description}</p>}
         </div>
       )}
       <button
@@ -32,12 +32,12 @@ export default function ToggleSwitch({ enabled, onChange, label, description, si
         onClick={() => onChange(!enabled)}
         disabled={disabled}
         className={`
-          relative inline-flex items-center flex-shrink-0 ${trackSize} rounded-full 
+          relative inline-flex items-center flex-shrink-0 ${trackSize} rounded-full
           transition-colors duration-200 ease-in-out cursor-pointer
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800
-          ${enabled 
-            ? 'bg-blue-600' 
-            : 'bg-gray-300 dark:bg-gray-600'
+          focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:ring-offset-2 focus:ring-offset-[#0a0f1e]
+          ${enabled
+            ? 'bg-[#3b82f6]'
+            : 'bg-white/10'
           }
         `}
       >
@@ -51,9 +51,9 @@ export default function ToggleSwitch({ enabled, onChange, label, description, si
         {/* ON/OFF label inside the track */}
         <span className={`
           absolute text-[9px] font-bold uppercase tracking-wide select-none
-          ${enabled 
-            ? 'left-1.5 text-white' 
-            : (size === 'sm' ? 'right-1 text-gray-500 dark:text-gray-400' : 'right-1.5 text-gray-500 dark:text-gray-400')
+          ${enabled
+            ? 'left-1.5 text-white'
+            : (size === 'sm' ? 'right-1 text-[#64748b]' : 'right-1.5 text-[#64748b]')
           }
         `}>
           {enabled ? 'ON' : 'OFF'}

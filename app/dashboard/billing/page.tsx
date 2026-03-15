@@ -82,50 +82,50 @@ export default function BillingPage() {
   const getStatusDisplay = (status: string) => {
     switch (status) {
       case 'active':
-        return { label: 'Active', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500', dot: true }
+        return { label: 'Active', color: 'text-emerald-400', bg: 'bg-emerald-500', dot: true }
       case 'past_due':
-        return { label: 'Payment Overdue', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500', dot: true }
+        return { label: 'Payment Overdue', color: 'text-[#fb7185]', bg: 'bg-[#f43f5e]', dot: true }
       case 'cancelled':
-        return { label: 'Cancelled', color: 'text-gray-500 dark:text-gray-400', bg: 'bg-gray-400', dot: false }
+        return { label: 'Cancelled', color: 'text-[#94a3b8]', bg: 'bg-[#64748b]', dot: false }
       case 'trialing':
-        return { label: 'Trial', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500', dot: true }
+        return { label: 'Trial', color: 'text-[#60a5fa]', bg: 'bg-[#3b82f6]', dot: true }
       default:
-        return { label: status, color: 'text-gray-500', bg: 'bg-gray-400', dot: false }
+        return { label: status, color: 'text-[#94a3b8]', bg: 'bg-[#64748b]', dot: false }
     }
   }
 
   return (
     <DashboardLayout title="Billing & Subscription" subtitle="Manage your plan and payment methods">
-      {error && <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">{error}</div>}
+      {error && <div className="mb-4 bg-[#f43f5e]/10 border border-[#f43f5e]/20 text-[#fb7185] px-4 py-3 rounded-lg">{error}</div>}
 
       {/* Past due warning banner */}
       {subscription?.status === 'past_due' && (
-        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center justify-between gap-4">
+        <div className="mb-6 bg-[#f43f5e]/10 border border-[#f43f5e]/20 rounded-xl p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-red-500 text-xl">⚠</span>
+            <span className="text-[#f43f5e] text-xl">⚠</span>
             <div>
-              <p className="text-sm font-medium text-red-700 dark:text-red-400">Your payment is overdue</p>
-              <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">Please update your payment method to avoid losing access to your features.</p>
+              <p className="text-sm font-medium text-[#fb7185]">Your payment is overdue</p>
+              <p className="text-xs text-[#f43f5e]/70 mt-0.5">Please update your payment method to avoid losing access to your features.</p>
             </div>
           </div>
           <button onClick={handleManageBilling} disabled={portalLoading}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors whitespace-nowrap flex-shrink-0 disabled:opacity-50">
+            className="px-4 py-2 bg-[#f43f5e] text-white rounded-lg text-sm font-medium hover:bg-[#e11d48] transition-colors whitespace-nowrap flex-shrink-0 disabled:opacity-50">
             {portalLoading ? 'Opening...' : 'Update Payment'}
           </button>
         </div>
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading billing information...</div>
+        <div className="text-center py-12 text-[#94a3b8]">Loading billing information...</div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Current Plan */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+            <div className="glass-card-static overflow-hidden">
+              <div className="p-6 border-b border-white/10">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold rounded-full uppercase">
+                  <span className="badge-info uppercase font-bold">
                     Current Plan
                   </span>
                   {subscription && (() => {
@@ -138,12 +138,12 @@ export default function BillingPage() {
                     )
                   })()}
                 </div>
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                <h2 className="text-3xl font-bold text-[#f1f5f9] mb-1">
                   {plan?.name || 'No Active Plan'}
                 </h2>
-                {plan && <p className="text-xl text-blue-600 dark:text-blue-400 font-semibold">{plan.price}</p>}
+                {plan && <p className="text-xl text-[#60a5fa] font-semibold">{plan.price}</p>}
                 {subscription && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  <p className="text-sm text-[#94a3b8] mt-2">
                     {subscription.status === 'cancelled'
                       ? `Access until: ${new Date(subscription.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
                       : `Next billing date: ${new Date(subscription.current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
@@ -154,12 +154,12 @@ export default function BillingPage() {
 
               {/* Plan Features */}
               {plan && (
-                <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Plan Includes:</h3>
+                <div className="p-6 border-b border-white/10">
+                  <h3 className="text-sm font-semibold text-[#f1f5f9] mb-3">Plan Includes:</h3>
                   <ul className="space-y-2">
                     {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                        <span className="w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0">✓</span>
+                      <li key={i} className="flex items-center text-sm text-[#94a3b8]">
+                        <span className="w-5 h-5 bg-emerald-500/15 text-emerald-400 rounded-full flex items-center justify-center text-xs mr-2 flex-shrink-0">✓</span>
                         {feature}
                       </li>
                     ))}
@@ -168,33 +168,33 @@ export default function BillingPage() {
               )}
 
               {/* Actions */}
-              <div className="p-6 bg-gray-50 dark:bg-gray-900/50 flex flex-col sm:flex-row gap-3">
+              <div className="p-6 bg-white/5 flex flex-col sm:flex-row gap-3">
                 {subscription && subscription.status !== 'cancelled' ? (
                   <button onClick={handleManageBilling} disabled={portalLoading}
-                    className="px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50">
+                    className="px-6 py-2.5 border border-white/10 rounded-lg text-sm font-medium text-[#94a3b8] hover:bg-white/5 transition-colors disabled:opacity-50">
                     {portalLoading ? 'Opening...' : 'Manage Billing'}
                   </button>
                 ) : (
                   <Link href="/plans"
-                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors text-center">
+                    className="btn btn-primary px-6 py-2.5 text-center">
                     {subscription?.status === 'cancelled' ? 'Resubscribe' : 'Choose a Plan'}
                   </Link>
                 )}
                 <Link href="/plans"
-                  className="px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center">
+                  className="px-6 py-2.5 border border-white/10 rounded-lg text-sm font-medium text-[#94a3b8] hover:bg-white/5 transition-colors text-center">
                   View All Plans
                 </Link>
               </div>
             </div>
 
             {/* Payment Security */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="glass-card-static p-6">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-2xl">🔒</span>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Secure Payments</h3>
+                <h3 className="text-lg font-semibold text-[#f1f5f9]">Secure Payments</h3>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                All payments are processed securely through Stripe. We never store your card details. 
+              <p className="text-sm text-[#94a3b8]">
+                All payments are processed securely through Stripe. We never store your card details.
                 You can manage your payment methods, view invoices, and update your subscription through the Stripe customer portal.
               </p>
             </div>
@@ -203,36 +203,36 @@ export default function BillingPage() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             {!subscription && (
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg sticky top-24">
+              <div className="glass-card-strong p-6 sticky top-24 bg-gradient-to-br from-[#3b82f6]/20 to-[#7c3aed]/20 border-[#3b82f6]/30">
                 <span className="text-3xl mb-3 block">⚡</span>
-                <h3 className="text-xl font-bold mb-2">Get Started</h3>
-                <p className="text-blue-100 text-sm mb-4">
+                <h3 className="text-xl font-bold text-[#f1f5f9] mb-2">Get Started</h3>
+                <p className="text-[#94a3b8] text-sm mb-4">
                   Subscribe to a plan to unlock the full power of AI automation for your business.
                 </p>
                 <ul className="space-y-2 mb-6 text-sm">
                   {['AI Receptionist', 'Lead Capture', 'Appointment Scheduling', 'WhatsApp Automation'].map((f, i) => (
-                    <li key={i} className="flex items-center">
-                      <span className="mr-2">✓</span> {f}
+                    <li key={i} className="flex items-center text-[#f1f5f9]">
+                      <span className="mr-2 text-emerald-400">✓</span> {f}
                     </li>
                   ))}
                 </ul>
-                <Link href="/plans" className="block w-full py-3 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors text-center">
+                <Link href="/plans" className="block w-full py-3 btn btn-primary text-center font-bold">
                   View Plans
                 </Link>
               </div>
             )}
 
             {subscription && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sticky top-24">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Need Help?</h3>
+              <div className="glass-card-static p-6 sticky top-24">
+                <h3 className="font-semibold text-[#f1f5f9] mb-4">Need Help?</h3>
                 <div className="space-y-3 text-sm">
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-[#94a3b8]">
                     Questions about your billing or subscription? Contact our support team.
                   </p>
-                  <Link href="/support" className="block text-blue-600 dark:text-blue-400 hover:underline">
+                  <Link href="/support" className="block text-[#60a5fa] hover:underline">
                     Contact Support →
                   </Link>
-                  <Link href="/plans" className="block text-blue-600 dark:text-blue-400 hover:underline">
+                  <Link href="/plans" className="block text-[#60a5fa] hover:underline">
                     Compare Plans →
                   </Link>
                 </div>

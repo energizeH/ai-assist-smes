@@ -44,14 +44,14 @@ export default function PasswordStrength({ password }: PasswordStrengthProps) {
     if (metCount <= 2) return 'bg-red-500'
     if (metCount === 3) return 'bg-orange-500'
     if (metCount === 4) return 'bg-yellow-500'
-    return 'bg-green-500'
+    return 'bg-emerald-500'
   }
 
   const getStrengthTextColour = () => {
-    if (metCount <= 2) return 'text-red-600 dark:text-red-400'
-    if (metCount === 3) return 'text-orange-600 dark:text-orange-400'
-    if (metCount === 4) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-green-600 dark:text-green-400'
+    if (metCount <= 2) return 'text-red-400'
+    if (metCount === 3) return 'text-orange-400'
+    if (metCount === 4) return 'text-yellow-400'
+    return 'text-emerald-400'
   }
 
   const strengthPercent = (metCount / 5) * 100
@@ -59,7 +59,7 @@ export default function PasswordStrength({ password }: PasswordStrengthProps) {
   return (
     <div className="mt-2 space-y-2">
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-300 ${getStrengthColour()}`}
             style={{ width: `${strengthPercent}%` }}
@@ -73,15 +73,15 @@ export default function PasswordStrength({ password }: PasswordStrengthProps) {
         {criteria.map((c) => (
           <li key={c.label} className="flex items-center gap-1.5 text-xs">
             {c.met ? (
-              <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <svg className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             ) : (
-              <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <svg className="w-3.5 h-3.5 text-[#64748b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             )}
-            <span className={c.met ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>
+            <span className={c.met ? 'text-emerald-400' : 'text-[#94a3b8]'}>
               {c.label}
             </span>
           </li>

@@ -15,10 +15,10 @@ export default function UpgradeBanner({ feature, message, compact = false }: Upg
 
   if (compact) {
     return (
-      <div className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 px-3 py-1.5 rounded-lg text-xs font-medium">
+      <div className="inline-flex items-center gap-2 bg-[#f59e0b]/10 border border-[#f59e0b]/20 text-[#fbbf24] px-3 py-1.5 rounded-lg text-xs font-medium">
         <span>⚡</span>
         <span>{text}</span>
-        <Link href="/plans" className="text-blue-600 dark:text-blue-400 hover:underline ml-1">
+        <Link href="/plans" className="text-[#60a5fa] hover:underline ml-1">
           Upgrade
         </Link>
       </div>
@@ -26,17 +26,17 @@ export default function UpgradeBanner({ feature, message, compact = false }: Upg
   }
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-center justify-between gap-4">
+    <div className="bg-gradient-to-r from-[#3b82f6]/10 to-[#7c3aed]/10 border border-[#3b82f6]/20 rounded-xl p-4 flex items-center justify-between gap-4">
       <div className="flex items-center gap-3">
         <span className="text-2xl">⚡</span>
         <div>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">{text}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Get access to more powerful features</p>
+          <p className="text-sm font-medium text-[#f1f5f9]">{text}</p>
+          <p className="text-xs text-[#64748b] mt-0.5">Get access to more powerful features</p>
         </div>
       </div>
       <Link
         href="/plans"
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap flex-shrink-0"
+        className="btn btn-primary text-sm whitespace-nowrap flex-shrink-0"
       >
         View Plans
       </Link>

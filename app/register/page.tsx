@@ -62,60 +62,62 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold text-blue-600 dark:text-blue-400">AI-Assist for SMEs</Link>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">Create Account</h2>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">Start automating your business today</p>
+    <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center py-12 px-4 relative overflow-hidden">
+      <div className="orb orb-violet w-96 h-96 -top-48 -left-48" />
+      <div className="orb orb-blue w-80 h-80 -bottom-40 -right-40" />
+
+      <div className="max-w-md w-full relative z-10">
+        <div className="text-center mb-8 animate-fadeIn">
+          <Link href="/" className="text-3xl font-bold gradient-text">AI-Assist for SMEs</Link>
+          <h2 className="mt-6 text-3xl font-bold text-[#f1f5f9]">Create Account</h2>
+          <p className="mt-2 text-[#94a3b8]">Start automating your business today</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-100 dark:border-gray-700">
+        <div className="glass-card-strong p-8 animate-fadeIn stagger-2">
           {status === 'success' && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-              <p className="text-green-800 dark:text-green-400 text-sm">{successMessage}</p>
-              <p className="text-green-600 dark:text-green-500 text-xs mt-1">Redirecting to login...</p>
+            <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+              <p className="text-emerald-400 text-sm">{successMessage}</p>
+              <p className="text-emerald-500/70 text-xs mt-1">Redirecting to login...</p>
             </div>
           )}
 
           {status === 'error' && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-red-800 dark:text-red-400 text-sm">{error}</p>
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-[#94a3b8] mb-1">Full Name</label>
               <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required
                 disabled={status === 'loading'}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="input w-full"
                 placeholder="John Smith" />
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+              <label htmlFor="email" className="block text-sm font-medium text-[#94a3b8] mb-1">Email Address</label>
               <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required
                 disabled={status === 'loading'}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="input w-full"
                 placeholder="john@company.com" />
             </div>
             <div>
-              <label htmlFor="company" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company Name (Optional)</label>
+              <label htmlFor="company" className="block text-sm font-medium text-[#94a3b8] mb-1">Company Name (Optional)</label>
               <input type="text" id="company" name="company" value={formData.company} onChange={handleChange}
                 disabled={status === 'loading'}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="input w-full"
                 placeholder="Your Company Ltd" />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-[#94a3b8] mb-1">Password</label>
               <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} required
                 disabled={status === 'loading'} minLength={8}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="input w-full"
                 placeholder="Min 8 characters" />
               <PasswordStrength password={formData.password} />
             </div>
 
-            {/* Terms & Privacy Acceptance */}
             <div className="flex items-start gap-3">
               <input
                 type="checkbox"
@@ -123,33 +125,34 @@ export default function RegisterPage() {
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
                 disabled={status === 'loading'}
-                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-[#3b82f6] focus:ring-[#3b82f6] cursor-pointer"
               />
-              <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+              <label htmlFor="terms" className="text-sm text-[#94a3b8] cursor-pointer">
                 I agree to the{' '}
-                <Link href="/terms" target="_blank" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                <Link href="/terms" target="_blank" className="text-[#60a5fa] hover:text-[#3b82f6] font-medium transition">
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link href="/privacy" target="_blank" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                <Link href="/privacy" target="_blank" className="text-[#60a5fa] hover:text-[#3b82f6] font-medium transition">
                   Privacy Policy
                 </Link>
               </label>
             </div>
 
             <button type="submit" disabled={status === 'loading'}
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+              className="btn btn-primary w-full py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed">
               {status === 'loading' ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+          <p className="text-center text-sm text-[#94a3b8] mt-6">
             Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:underline font-semibold">Sign in</Link>
+            <Link href="/login" className="text-[#60a5fa] hover:text-[#3b82f6] font-semibold transition">Sign in</Link>
           </p>
         </div>
-        <div className="mt-8 text-center">
-          <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">&larr; Back to home</Link>
+
+        <div className="mt-8 text-center animate-fadeIn stagger-3">
+          <Link href="/" className="text-[#64748b] hover:text-[#f1f5f9] transition">&larr; Back to home</Link>
         </div>
       </div>
     </div>
